@@ -36,11 +36,11 @@ async function gerarKeyUnica(dbMySQL, tentativasMax = 5) {
     throw new Error('Nao foi possivel gerar key unica');
 }
 
-async function inserirKeysTable(connection, keys, createdBy) {
+async function inserirKeysTable(connection, keys) {
     for (const key of keys) {
         await connection.query(
-            'INSERT INTO keys_table (key_value, created_by) VALUES (?, ?)',
-            [key, createdBy]
+            'INSERT INTO keys_table (key_value) VALUES (?)',
+            [key]
         );
     }
 }

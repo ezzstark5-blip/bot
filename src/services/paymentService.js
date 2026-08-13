@@ -252,7 +252,7 @@ function createPaymentService({ client, dbMySQL, CONFIG, store, helpers, discord
                 keys.push(await gerarKeyUnica(dbMySQL));
             }
 
-            await inserirKeysTable(connection, keys, `venda:${carrinho.pedidoId}`);
+            await inserirKeysTable(connection, keys);
 
             const [updateResult] = await connection.query(
                 `UPDATE produtos SET ${carrinho.colunaEstoque} = ${carrinho.colunaEstoque} - ? WHERE id = ?`,

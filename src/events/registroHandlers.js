@@ -287,8 +287,8 @@ module.exports = {
                 const key = await gerarKeyUnica(dbMySQL);
 
                 await dbMySQL.query(
-                    'INSERT INTO keys_table (key_value, created_by) VALUES (?, ?)',
-                    [key, interaction.user.tag]
+                    'INSERT INTO keys_table (key_value) VALUES (?)',
+                    [key]
                 );
 
                 const keyContainer = buildContainer({
