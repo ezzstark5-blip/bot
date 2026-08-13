@@ -20,6 +20,7 @@ const { createModalHandlers } = require('./events/vendas/modalHandlers');
 const { registerInteractionHandlers } = require('./events/interactionCreate');
 const { createExpressApp } = require('./server/createExpressApp');
 const { iniciarPainelAdmin } = require('./web/server.js');
+const { iniciarPresencaEBotVoice } = require('./services/botPresenceService');
 
 function start() {
     iniciarLogger();
@@ -29,7 +30,8 @@ function start() {
         intents: [
             GatewayIntentBits.Guilds,
             GatewayIntentBits.GuildMessages,
-            GatewayIntentBits.MessageContent
+            GatewayIntentBits.MessageContent,
+            GatewayIntentBits.GuildVoiceStates
         ]
     });
 
@@ -119,6 +121,8 @@ function start() {
         } catch (error) {
             console.error('Erro ao registrar slash commands:', error.message);
         }
+
+        await iniciarPresencaEBotVoice(client, CONFIG);
 
         iniciarPainelAdmin(dbMySQL, registrarLog, app);
     });

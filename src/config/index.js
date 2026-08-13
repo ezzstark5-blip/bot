@@ -29,7 +29,10 @@ const CONFIG = {
     API_KEY: process.env.API_KEY || '',
     WEBHOOK_LOG_PAGAMENTOS: process.env.WEBHOOK_LOG_PAGAMENTOS || '',
     WEBHOOK_LOG_CARRINHOS: process.env.WEBHOOK_LOG_CARRINHOS || '',
-    WEBHOOK_LOG_STOCK: process.env.WEBHOOK_LOG_STOCK || ''
+    WEBHOOK_LOG_STOCK: process.env.WEBHOOK_LOG_STOCK || '',
+    BOT_STATUS: process.env.BOT_STATUS || 'Vendas Automatticas',
+    TWITCH_URL: process.env.TWITCH_URL || 'https://www.twitch.tv/ezzstark5',
+    VOICE_CHANNEL_ID: process.env.VOICE_CHANNEL_ID || '1536863675636523028'
 };
 
 module.exports = CONFIG;
