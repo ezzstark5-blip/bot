@@ -98,6 +98,25 @@ function createPaymentService({ client, dbMySQL, CONFIG, store, helpers, discord
         }
     }
 
+    function agendarFechamentoTopico(threadId, delayMs = 10000) {
+        if (!threadId) {
+            return;
+        }
+
+        setTimeout(async () => {
+            try {
+                const thread = await client.channels.fetch(threadId);
+                if (thread?.isThread()) {
+                    await thread.setArchived(true);
+                    await thread.setLocked(true);
+                    console.log(`✅ Topico ${threadId} fechado apos aprovacao`);
+                }
+            } catch (error) {
+                console.error('❌ Erro ao fechar topico pos-aprovacao:', error.message);
+            }
+        }, delayMs);
+    }
+
     async function atualizarThreadPosPagamento(userId, carrinho, keys, total, dmEnviada) {
         const threadId = threadsPedidos.get(userId);
         if (!threadId) {
@@ -387,6 +406,9 @@ function createPaymentService({ client, dbMySQL, CONFIG, store, helpers, discord
                 pedidoId: carrinho.pedidoId,
                 comprador: user
             });
+
+            const threadIdParaFechar = threadsPedidos.get(userId);
+            agendarFechamentoTopico(threadIdParaFechar);
 
             carrinhos.delete(userId);
             mensagensCarrinho.delete(userId);
