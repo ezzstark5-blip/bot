@@ -4,7 +4,9 @@
   "description": "Sistema de vendas otimizado para baixo consumo de RAM",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "register": "node src/utils/registerSlashCommands.js",
+    "deploy-commands": "node src/utils/registerSlashCommands.js"
   },
 "dependencies": {
     "discord.js": "^14.14.1",
