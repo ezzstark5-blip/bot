@@ -40,6 +40,18 @@ function formatEmbedContent({ title, description, fields, footer, timestamp, url
     return truncate(lines.join('\n\n'));
 }
 
+function resolveMediaUrl(url) {
+    if (!url) {
+        return null;
+    }
+
+    if (String(url).startsWith('attachment://')) {
+        return url;
+    }
+
+    return null;
+}
+
 function buildContainer(options = {}) {
     const {
         title,
@@ -49,7 +61,7 @@ function buildContainer(options = {}) {
         timestamp,
         url,
         color = 0xffffff,
-        thumbnail,
+        thumbnail: _thumbnail,
         image,
         actionRows = [],
         separators = false
@@ -57,6 +69,8 @@ function buildContainer(options = {}) {
 
     const container = new ContainerBuilder().setAccentColor(color ?? 0xffffff);
     const content = formatEmbedContent({ title, description, fields, footer, timestamp, url });
+    const thumbnail = null;
+    const resolvedImage = resolveMediaUrl(image);
 
     if (thumbnail) {
         const section = new SectionBuilder().addTextDisplayComponents(
@@ -68,9 +82,9 @@ function buildContainer(options = {}) {
         container.addTextDisplayComponents(new TextDisplayBuilder().setContent(content));
     }
 
-    if (image) {
+    if (resolvedImage) {
         container.addMediaGalleryComponents(
-            new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL(image))
+            new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL(resolvedImage))
         );
     }
 
@@ -154,10 +168,6 @@ function buildWebhookPayload(options = {}) {
 
     if (username) {
         body.username = username;
-    }
-
-    if (avatar_url) {
-        body.avatar_url = avatar_url;
     }
 
     return body;
