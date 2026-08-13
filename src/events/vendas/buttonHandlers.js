@@ -8,7 +8,6 @@ const {
     AttachmentBuilder
 } = require('discord.js');
 const { buildContainer, buildPayload, ActionRowBuilder } = require('../../utils/componentsV2');
-const { executarCountdownEphemeral } = require('../../utils/paymentLoading');
 const { buildRevisaoContainer, buildRevisaoBotoes, calcularTotal } = require('./carrinhoUi');
 const { buildProdutoVendaContainer, buildPlanoSelectMenu } = require('./produtoVendaUi');
 
@@ -370,9 +369,7 @@ function createButtonHandlers({ client, dbMySQL, CONFIG, store, paymentService, 
             const carrinhoLog = { ...carrinho };
 
             try {
-                const pagamentoPromise = paymentService.processarPagamentoCarteira(userId, carrinho);
-                await executarCountdownEphemeral(interaction, CONFIG, client, 5);
-                await pagamentoPromise;
+                await paymentService.processarPagamentoCarteira(userId, carrinho);
 
                 if (enviarLogCarrinho) {
                     await enviarLogCarrinho(client, 'pix_gerado', {
@@ -384,14 +381,7 @@ function createButtonHandlers({ client, dbMySQL, CONFIG, store, paymentService, 
                     });
                 }
 
-                await interaction.editReply(buildPayload({
-                    container: buildContainer({
-                        title: '✅ Compra confirmada!',
-                        description: 'Pagamento aprovado e produto entregue. Verifique seu privado (DM).',
-                        color: CONFIG.COR_EMBED_SUCESSO
-                    }),
-                    ephemeral: true
-                }));
+                await interaction.deleteReply().catch(() => {});
             } catch (error) {
                 console.error('❌ Erro pagamento carteira:', error);
                 await interaction.editReply(buildPayload({
