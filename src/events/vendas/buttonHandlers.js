@@ -8,6 +8,7 @@ const {
     AttachmentBuilder
 } = require('discord.js');
 const { buildContainer, buildPayload, ActionRowBuilder } = require('../../utils/componentsV2');
+const { executarCountdownEphemeral } = require('../../utils/paymentLoading');
 const { buildRevisaoContainer, buildRevisaoBotoes, calcularTotal } = require('./carrinhoUi');
 const { buildProdutoVendaContainer, buildPlanoSelectMenu } = require('./produtoVendaUi');
 
@@ -365,36 +366,22 @@ function createButtonHandlers({ client, dbMySQL, CONFIG, store, paymentService, 
 
             await interaction.deferUpdate();
 
+            const totalCompra = calcularTotal(carrinho);
+            const carrinhoLog = { ...carrinho };
+
             try {
-                const resultado = await paymentService.processarPagamentoCarteira(userId, carrinho);
+                const pagamentoPromise = paymentService.processarPagamentoCarteira(userId, carrinho);
+                await executarCountdownEphemeral(interaction, CONFIG, client, 5);
+                await pagamentoPromise;
 
                 if (enviarLogCarrinho) {
                     await enviarLogCarrinho(client, 'pix_gerado', {
                         user: interaction.user,
-                        carrinho,
-                        total: resultado.total,
+                        carrinho: carrinhoLog,
+                        total: totalCompra,
                         threadId: threadsPedidos.get(userId),
                         descricao: 'Pagamento aprovado via carteira'
                     });
-                }
-
-                const threadId = threadsPedidos.get(userId);
-                if (threadId) {
-                    const thread = await client.channels.fetch(threadId).catch(() => null);
-                    if (thread?.isThread()) {
-                        await thread.send(buildPayload({
-                            container: buildContainer({
-                                title: '✅ Pagamento via Carteira',
-                                description: 'Compra aprovada automaticamente com saldo da carteira.',
-                                fields: [
-                                    { name: '💰 Valor', value: `**R$ ${resultado.total.toFixed(2)}**`, inline: true },
-                                    { name: '🆔 Pedido', value: `\`${carrinho.pedidoId}\``, inline: true }
-                                ],
-                                color: CONFIG.COR_EMBED_SUCESSO,
-                                timestamp: true
-                            })
-                        })).catch(() => {});
-                    }
                 }
 
                 await interaction.editReply(buildPayload({

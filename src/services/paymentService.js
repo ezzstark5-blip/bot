@@ -1,4 +1,5 @@
 const { buildContainer, buildPayload } = require('../utils/componentsV2');
+const { executarCountdownTopico, limparMensagensBotTopico } = require('../utils/paymentLoading');
 const QRCode = require('qrcode');
 
 function createPaymentService({ client, dbMySQL, CONFIG, store, helpers, discordLog, avaliacaoService, registrarLog, stormWalletService, walletService }) {
@@ -129,6 +130,18 @@ function createPaymentService({ client, dbMySQL, CONFIG, store, helpers, discord
                 return;
             }
 
+            let mensagemAguardando = null;
+            if (carrinho.mensagemAguardandoId) {
+                try {
+                    mensagemAguardando = await thread.messages.fetch(carrinho.mensagemAguardandoId);
+                } catch (editError) {
+                    console.error('⚠️ Nao foi possivel buscar mensagem de aguardo:', editError.message);
+                }
+            }
+
+            await executarCountdownTopico(thread, CONFIG, client, mensagemAguardando, 5);
+            await limparMensagensBotTopico(thread, client.user.id);
+
             const keysField = dmEnviada
                 ? {
                     name: '🔑 Suas Keys',
@@ -168,21 +181,8 @@ function createPaymentService({ client, dbMySQL, CONFIG, store, helpers, discord
                 timestamp: true
             });
 
-            const payload = buildPayload({ container: confirmedContainer });
-
-            if (carrinho.mensagemAguardandoId) {
-                try {
-                    const msg = await thread.messages.fetch(carrinho.mensagemAguardandoId);
-                    await msg.edit(payload);
-                    console.log(`✅ Thread atualizada para pagamento confirmado: ${threadId}`);
-                    return;
-                } catch (editError) {
-                    console.error('⚠️ Nao foi possivel editar mensagem de aguardo:', editError.message);
-                }
-            }
-
-            await thread.send(payload);
-            console.log(`✅ Confirmacao enviada na thread ${threadId}`);
+            await thread.send(buildPayload({ container: confirmedContainer }));
+            console.log(`✅ Thread limpa e confirmacao enviada: ${threadId}`);
         } catch (error) {
             console.error('❌ Erro ao atualizar thread pos-pagamento:', error.message);
         }
@@ -718,7 +718,7 @@ function createPaymentService({ client, dbMySQL, CONFIG, store, helpers, discord
             await confirmarPagamentoAutomatico(userId, carrinho, {
                 metodoPagamento: 'CARTEIRA',
                 metodoLog: '💳 Carteira',
-                debitarCarteira: total
+                debitarCarteira: true
             });
             return { sucesso: true, total };
         } finally {
