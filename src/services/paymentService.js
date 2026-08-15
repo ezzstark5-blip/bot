@@ -588,6 +588,7 @@ function createPaymentService({ client, dbMySQL, CONFIG, store, helpers, discord
 
                 if (stormWalletService.isChargeExpired(charge)) {
                     pararVerificacaoStorm(userId);
+                    const eraDeposito = carrinho.tipo === 'deposito';
                     carrinhos.delete(userId);
                     limparTimer(userId);
 
@@ -598,12 +599,16 @@ function createPaymentService({ client, dbMySQL, CONFIG, store, helpers, discord
                             await thread.send(buildPayload({
                                 container: buildContainer({
                                     title: '⏰ Pagamento Expirado',
-                                    description: 'O PIX expirou. Inicie uma nova compra.',
+                                    description: eraDeposito
+                                        ? 'O depósito expirou. Abra um novo pelo painel de saldo.'
+                                        : 'O PIX expirou. Inicie uma nova compra.',
                                     color: CONFIG.COR_EMBED_ERRO
                                 })
                             })).catch(() => {});
+                            agendarFechamentoTopico(threadId, 3000);
                         }
                     }
+                    threadsPedidos.delete(userId);
                 }
             } catch (error) {
                 console.error('❌ Erro ao verificar pagamento Storm:', error.message);
