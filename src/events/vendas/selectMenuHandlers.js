@@ -69,6 +69,7 @@ function createSelectMenuHandlers({ client, dbMySQL, CONFIG, store, helpers, dis
                 pedidoId,
                 produtoId: produto.id,
                 produtoNome: produto.nome,
+                produtoSlug: produto.slug,
                 plano,
                 preco,
                 quantidade: 1,

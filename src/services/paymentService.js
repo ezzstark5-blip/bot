@@ -3,7 +3,7 @@ const { executarCountdownTopico, limparMensagensBotTopico } = require('../utils/
 const QRCode = require('qrcode');
 
 function createPaymentService({ client, dbMySQL, CONFIG, store, helpers, discordLog, avaliacaoService, registrarLog, stormWalletService, walletService }) {
-    const { gerarKeyUnica, inserirKeysTable, getPainelIdFromCarrinho } = helpers;
+    const { gerarKeyUnica, inserirKeysTable, getPainelIdFromCarrinho, resolveBotByPanelId, getBotByKeyTableName, planoParaDuracao, inserirKeysPainelBotBy } = helpers;
     const { enviarLogVenda, enviarLogStock } = discordLog;
     const {
         carrinhos,
@@ -362,12 +362,26 @@ function createPaymentService({ client, dbMySQL, CONFIG, store, helpers, discord
                 return;
             }
 
-            const keys = [];
-            for (let i = 0; i < carrinho.quantidade; i++) {
-                keys.push(await gerarKeyUnica(dbMySQL));
+            const panelId = resolveBotByPanelId(produto, carrinho);
+            if (!panelId) {
+                throw new Error(`Produto sem painel BOT-BY. Slug atual: ${produto.slug || 'vazio'}`);
             }
 
-            await inserirKeysTable(connection, keys);
+            const keyTable = getBotByKeyTableName(panelId);
+            const duracao = planoParaDuracao(carrinho.plano);
+
+            const keys = [];
+            for (let i = 0; i < carrinho.quantidade; i++) {
+                keys.push(await gerarKeyUnica(dbMySQL, 5, keyTable));
+            }
+
+            await inserirKeysPainelBotBy(connection, keys, panelId, duracao);
+
+            try {
+                await inserirKeysTable(connection, keys);
+            } catch (keysTableError) {
+                console.warn('⚠️ keys_table local nao atualizada:', keysTableError.message);
+            }
 
             const [updateResult] = await connection.query(
                 `UPDATE produtos SET ${carrinho.colunaEstoque} = ${carrinho.colunaEstoque} - ? WHERE id = ?`,
