@@ -22,7 +22,7 @@ function createModalHandlers({ client, dbMySQL, CONFIG, store, helpers, paymentS
                 return interaction.reply(buildPayload({
                     container: buildContainer({
                         title: '❌ Valor inválido',
-                        description: 'Digite um valor de no mínimo **R$ 1.00**. Exemplo: `50.00`',
+                        description: 'Digite um valor de no mínimo **R$ 1.00**. Exemplo: `10.00`',
                         color: CONFIG.COR_EMBED_ERRO
                     }),
                     ephemeral: true
