@@ -31,7 +31,8 @@ function start() {
             GatewayIntentBits.Guilds,
             GatewayIntentBits.GuildMessages,
             GatewayIntentBits.MessageContent,
-            GatewayIntentBits.GuildVoiceStates
+            GatewayIntentBits.GuildVoiceStates,
+            GatewayIntentBits.GuildMembers
         ]
     });
 
@@ -127,6 +128,20 @@ function start() {
         await iniciarPresencaEBotVoice(client, CONFIG);
 
         iniciarPainelAdmin(dbMySQL, registrarLog, app);
+    });
+
+    client.on('guildMemberAdd', async (member) => {
+        const cargoId = CONFIG.CARGO_ENTRADA;
+        if (!cargoId || member.user.bot) {
+            return;
+        }
+
+        try {
+            await member.roles.add(cargoId, 'Cargo automático ao entrar');
+            console.log(`✅ Cargo de entrada dado para ${member.user.tag}`);
+        } catch (error) {
+            console.error(`❌ Não foi possível dar o cargo de entrada para ${member.user.tag}:`, error.message);
+        }
     });
 
     client.login(process.env.TOKEN);
