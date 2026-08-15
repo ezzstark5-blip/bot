@@ -118,17 +118,27 @@ function createModalHandlers({ client, dbMySQL, CONFIG, store, helpers, paymentS
                 files: [attachment]
             }));
 
-            const timer = setTimeout(() => {
+            const timer = setTimeout(async () => {
                 const atual = carrinhos.get(userId);
                 if (atual?.tipo === 'deposito' && !atual.pagamentoConfirmado) {
                     carrinhos.delete(userId);
-                    thread.send(buildPayload({
-                        container: buildContainer({
-                            title: '⏰ Tempo Expirado',
-                            description: 'O depósito expirou. Abra um novo pelo painel de saldo.',
-                            color: CONFIG.COR_EMBED_ERRO
-                        })
-                    })).catch(() => {});
+                    store.limparTimer(userId);
+                    try {
+                        await thread.send(buildPayload({
+                            container: buildContainer({
+                                title: '⏰ Tempo Expirado',
+                                description: 'O depósito expirou. Abra um novo pelo painel de saldo.',
+                                color: CONFIG.COR_EMBED_ERRO
+                            })
+                        }));
+                        setTimeout(async () => {
+                            await thread.setArchived(true);
+                            await thread.setLocked(true);
+                        }, 3000);
+                    } catch {
+                        // ignore
+                    }
+                    threadsPedidos.delete(userId);
                 }
             }, CONFIG.TEMPO_PAGAMENTO_MINUTOS * 60 * 1000);
 
