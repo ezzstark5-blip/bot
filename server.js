@@ -15,6 +15,9 @@ const app = express();
 // -----------------------------------------------------------------
 const PORT = process.env.PORT || 80;
 
+// Inicia o bot de status (opcional — só roda se BOT_TOKEN estiver definido)
+try { require('./bot'); } catch (e) { console.warn('[bot] Não foi possível iniciar o bot:', e.message); }
+
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 // Origem pública do site (onde share.html abre fora do Discord).
