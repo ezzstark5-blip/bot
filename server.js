@@ -391,11 +391,114 @@ app.post('/api/room', (req, res) => {
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// SPA fallback — serve landing.html quando não há token na URL, index.html caso contrário
+// Landing page — HTML inline para não depender de arquivo externo
+const LANDING_HTML = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Next Cup · Transmissões</title>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html,body{height:100%;overflow:hidden}
+    body{
+      font-family:'Segoe UI',system-ui,sans-serif;
+      background:#0d0d0f;color:#f2f3f5;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      min-height:100vh;position:relative;
+    }
+    .bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:linear-gradient(180deg,rgba(10,10,14,.5) 0%,rgba(10,10,14,.92) 55%,#0d0d0f 100%),
+      url('/foto/Next_-_Banner.png') center/cover no-repeat;}
+    .glow{position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:radial-gradient(ellipse 70% 45% at 50% 0%,rgba(198,40,40,.2) 0%,transparent 70%);}
+    .center{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;padding:24px;}
+    .logo{width:76px;height:76px;border-radius:20px;object-fit:contain;box-shadow:0 8px 36px rgba(198,40,40,.4);}
+    .brand{font-size:2.2rem;font-weight:800;letter-spacing:-.5px;
+      background:linear-gradient(135deg,#fff 30%,#ef5350 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .tagline{font-size:.93rem;color:#8a8e93;max-width:300px;line-height:1.55;}
+    .btn-criar{
+      display:inline-flex;align-items:center;gap:9px;
+      padding:13px 34px;background:#c62828;border:none;border-radius:999px;
+      color:#fff;font-size:1rem;font-weight:700;cursor:pointer;
+      box-shadow:0 4px 24px rgba(198,40,40,.45);transition:transform .15s,box-shadow .15s;
+      margin-top:4px;
+    }
+    .btn-criar:hover{transform:scale(1.04);box-shadow:0 6px 34px rgba(198,40,40,.65);}
+    .btn-criar:active{transform:scale(.98);}
+    .btn-criar:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+    .btn-criar svg{width:17px;height:17px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+    .url-box{display:none;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:440px;margin-top:4px;}
+    .url-box.on{display:flex;}
+    .url-label{font-size:.73rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#555;}
+    .url-row{display:flex;align-items:center;gap:8px;width:100%;background:#18191c;border:1px solid #2a2c30;border-radius:10px;padding:10px 14px;}
+    .url-input{flex:1;font-size:.82rem;color:#b5bac1;background:none;border:none;outline:none;font-family:inherit;cursor:default;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .btn-copy{flex-shrink:0;background:#c62828;border:none;border-radius:7px;padding:6px 14px;color:#fff;font-size:.78rem;font-weight:600;cursor:pointer;transition:background .15s;}
+    .btn-copy:hover{background:#d32f2f;}
+    .btn-copy.ok{background:#2e7d32;}
+    .hint{font-size:.76rem;color:#555;line-height:1.45;max-width:380px;}
+    .footer{position:fixed;bottom:16px;font-size:.7rem;color:#2e3035;z-index:1;}
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="glow"></div>
+  <div class="center">
+    <img class="logo" src="/foto/1321a2929b5943c3cc2be6e3722c2552.png" alt="NEXT">
+    <div class="brand">Next Cup</div>
+    <p class="tagline">Transmissões ao vivo dentro do Discord, sem sair do servidor.</p>
+    <button class="btn-criar" id="btnCriar">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+      Criar sala
+    </button>
+    <div class="url-box" id="urlBox">
+      <span class="url-label">Link da sala</span>
+      <div class="url-row">
+        <input class="url-input" id="urlInput" readonly>
+        <button class="btn-copy" id="btnCopy">Copiar</button>
+      </div>
+      <p class="hint">Envie este link para quem vai transmitir ou assistir. O link expira quando a sala fechar.</p>
+    </div>
+  </div>
+  <p class="footer">Next Cup · Transmissões ao vivo</p>
+  <script>
+    const btn=document.getElementById('btnCriar');
+    const box=document.getElementById('urlBox');
+    const inp=document.getElementById('urlInput');
+    const cpy=document.getElementById('btnCopy');
+    btn.addEventListener('click',async()=>{
+      btn.disabled=true;btn.innerHTML='Criando…';
+      try{
+        const r=await fetch('/api/room',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+        const d=await r.json();
+        if(!r.ok)throw new Error(d.error||'Erro');
+        const u=new URL(location.href);
+        u.pathname='/';u.search='';
+        u.searchParams.set('room',d.roomId);
+        u.searchParams.set('t',d.viewerToken);
+        inp.value=u.toString();
+        box.classList.add('on');
+        btn.innerHTML='<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 5v14"/><path d="M5 12h14"/></svg> Criar outra sala';
+        btn.disabled=false;
+      }catch(e){btn.innerHTML='Erro — tente novamente';btn.disabled=false;}
+    });
+    cpy.addEventListener('click',()=>{
+      navigator.clipboard.writeText(inp.value).then(()=>{
+        cpy.textContent='Copiado!';cpy.classList.add('ok');
+        setTimeout(()=>{cpy.textContent='Copiar';cpy.classList.remove('ok');},2000);
+      });
+    });
+  </script>
+</body>
+</html>`;
+
+// SPA fallback — landing quando não há token, index.html quando tem
 app.get('*', (req, res) => {
   const hasToken = req.query.t || req.query.frame_id;
   if (!hasToken) {
-    res.sendFile(path.join(__dirname, 'public', 'landing.html'));
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(LANDING_HTML);
   } else {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
   }
