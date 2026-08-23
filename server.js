@@ -375,6 +375,82 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', rooms: rooms.size });
 });
 
+// API: Busca canal de voz do usuário via bot
+app.post('/api/voice-channel', async (req, res) => {
+  const { access_token, guild_id, user_id } = req.body || {};
+  if (!access_token || !guild_id || !user_id) {
+    return res.status(400).json({ error: 'access_token, guild_id e user_id são obrigatórios' });
+  }
+  // Valida o token chamando a API do Discord
+  let user;
+  try {
+    user = await discordApi('/api/users/@me', access_token);
+    if (!user?.id) throw new Error('Token inválido');
+  } catch (e) {
+    return res.status(401).json({ error: 'Token inválido' });
+  }
+  // Busca canal de voz via bot
+  const channel = await bot.getVoiceChannel(guild_id, user_id).catch(() => null);
+  if (!channel) {
+    return res.status(404).json({ error: 'Você não está em nenhum canal de voz neste servidor.' });
+  }
+  res.json({ channel });
+});
+
+// API: Inicia a Activity no canal de voz via bot (usando HTTP API do Discord)
+app.post('/api/start-activity', async (req, res) => {
+  const { access_token, guild_id, channel_id, user_id } = req.body || {};
+  if (!access_token || !guild_id || !channel_id || !user_id) {
+    return res.status(400).json({ error: 'Campos obrigatórios ausentes' });
+  }
+  // Valida token
+  try {
+    const u = await discordApi('/api/users/@me', access_token);
+    if (!u?.id) throw new Error('inválido');
+  } catch {
+    return res.status(401).json({ error: 'Token inválido' });
+  }
+  // Cria invite de Activity via API REST do Discord usando o bot token
+  if (!process.env.BOT_TOKEN) {
+    return res.status(503).json({ error: 'Bot não configurado' });
+  }
+  try {
+    const body = JSON.stringify({
+      max_age: 86400,
+      max_uses: 0,
+      target_type: 2,                       // 2 = embedded application
+      target_application_id: CLIENT_ID,     // ID da sua Activity
+    });
+    const invite = await new Promise((resolve, reject) => {
+      const req2 = https.request({
+        hostname: 'discord.com',
+        path: `/api/v10/channels/${channel_id}/invites`,
+        method: 'POST',
+        headers: {
+          'Authorization': `Bot ${process.env.BOT_TOKEN}`,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(body),
+        },
+      }, (r) => {
+        let d = '';
+        r.on('data', c => d += c);
+        r.on('end', () => {
+          try { resolve(JSON.parse(d)); } catch { reject(new Error('Parse error')); }
+        });
+      });
+      req2.on('error', reject);
+      req2.write(body);
+      req2.end();
+    });
+    if (invite.error || invite.code === 0) {
+      return res.status(500).json({ error: invite.message || 'Falha ao criar invite' });
+    }
+    res.json({ invite_url: `https://discord.gg/${invite.code}` });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // API: Criar sala anônima (para a landing page)
 app.post('/api/room', (req, res) => {
   const roomId = 'public-' + Date.now() + '-' + crypto.randomBytes(4).toString('hex');
@@ -553,6 +629,103 @@ const LANDING_HTML = `<!DOCTYPE html>
     /* Footer */
     .footer{position:relative;z-index:1;padding:20px 40px 28px 10%;
       font-size:.7rem;color:rgba(255,255,255,.18);border-top:1px solid rgba(255,255,255,.06);}
+    /* ── Modal trigger ── */
+    .modal-trigger{
+      position:fixed;bottom:24px;right:24px;z-index:50;
+      width:44px;height:44px;border-radius:50%;
+      background:#c62828;border:none;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 4px 20px rgba(198,40,40,.5);
+      transition:transform .15s,box-shadow .15s;
+    }
+    .modal-trigger:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(198,40,40,.7);}
+    .modal-trigger svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+    /* ── Modal overlay ── */
+    .modal-overlay{
+      position:fixed;inset:0;z-index:60;
+      background:rgba(0,0,0,.7);backdrop-filter:blur(6px);
+      display:flex;align-items:center;justify-content:center;
+      opacity:0;pointer-events:none;transition:opacity .2s;
+    }
+    .modal-overlay.open{opacity:1;pointer-events:auto;}
+
+    /* ── Modal card ── */
+    .modal-card{
+      background:#18191c;border:1px solid rgba(255,255,255,.1);
+      border-radius:16px;padding:24px;width:90%;max-width:380px;
+      transform:translateY(20px) scale(.97);
+      transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+      box-shadow:0 20px 60px rgba(0,0,0,.5);
+    }
+    .modal-overlay.open .modal-card{transform:translateY(0) scale(1);}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+    .modal-title{display:flex;align-items:center;gap:8px;font-size:.9rem;font-weight:700;color:#fff;}
+    .modal-title svg{width:16px;height:16px;fill:none;stroke:#c62828;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .modal-close{background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:1rem;padding:2px 6px;border-radius:5px;transition:color .15s,background .15s;}
+    .modal-close:hover{color:#fff;background:rgba(255,255,255,.08);}
+
+    /* Steps */
+    .modal-step{display:flex;flex-direction:column;gap:10px;}
+    .step-label{display:flex;align-items:center;gap:8px;font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.5);}
+    .step-badge{
+      width:20px;height:20px;border-radius:50%;
+      background:#c62828;color:#fff;
+      font-size:.65rem;font-weight:800;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    }
+    .step-badge.done{background:#2e7d32;}
+    .step-text{font-size:.8rem;color:rgba(255,255,255,.45);line-height:1.55;}
+
+    /* Botão Discord no modal */
+    .modal-btn-discord{
+      display:flex;align-items:center;justify-content:center;gap:9px;
+      padding:11px 0;background:#5865f2;border:none;border-radius:10px;
+      color:#fff;font-size:.85rem;font-weight:600;cursor:pointer;width:100%;
+      transition:background .15s,transform .15s;
+    }
+    .modal-btn-discord:hover{background:#4752c4;transform:translateY(-1px);}
+    .modal-btn-discord svg{width:16px;height:16px;fill:#fff;flex-shrink:0;}
+
+    /* Card do usuário */
+    .user-card{
+      display:flex;align-items:center;gap:12px;
+      background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);
+      border-radius:10px;padding:12px 14px;
+    }
+    .user-card-av{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;}
+    .user-card-info{display:flex;flex-direction:column;gap:2px;}
+    .user-card-name{font-size:.88rem;font-weight:700;color:#fff;}
+    .user-card-tag{font-size:.72rem;color:rgba(255,255,255,.35);}
+
+    /* Canal de voz */
+    .voice-channel-row{
+      display:flex;align-items:center;gap:10px;
+      background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+      border-radius:10px;padding:10px 14px;
+    }
+    .voice-channel-icon{flex-shrink:0;}
+    .voice-channel-icon svg{width:16px;height:16px;fill:none;stroke:#3ba55d;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .voice-channel-name{flex:1;font-size:.83rem;font-weight:600;color:#f2f3f5;}
+    .voice-channel-status{font-size:.7rem;color:rgba(255,255,255,.3);}
+
+    /* Erro */
+    .modal-error{font-size:.78rem;color:#ff8a80;background:rgba(255,50,50,.1);
+      border:1px solid rgba(255,50,50,.25);border-radius:8px;padding:8px 12px;}
+
+    /* Botão conectar */
+    .modal-btn-connect{
+      display:flex;align-items:center;justify-content:center;gap:9px;
+      padding:12px 0;background:#c62828;border:none;border-radius:10px;
+      color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;width:100%;
+      box-shadow:0 4px 18px rgba(198,40,40,.35);
+      transition:background .15s,transform .15s,box-shadow .15s;
+    }
+    .modal-btn-connect:hover:not(:disabled){background:#d32f2f;transform:translateY(-1px);box-shadow:0 6px 24px rgba(198,40,40,.5);}
+    .modal-btn-connect:disabled{opacity:.45;cursor:not-allowed;}
+    .modal-btn-connect svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+    .modal-btn-connect.connected{background:#2e7d32;}
+    .modal-btn-connect.connected svg{stroke:#fff;}
   </style>
 </head>
 <body>
@@ -611,20 +784,11 @@ const LANDING_HTML = `<!DOCTYPE html>
         </div>
       </div>
 
-      <div class="stats anim-5">
-        <div class="stat"><span class="stat-val">0ms</span><span class="stat-label">Setup</span></div>
-        <div class="stat-sep"></div>
-        <div class="stat"><span class="stat-val">120fps</span><span class="stat-label">Máx FPS</span></div>
-        <div class="stat-sep"></div>
-        <div class="stat"><span class="stat-val">∞</span><span class="stat-label">Salas</span></div>
-      </div>
-
       <div class="btn-row anim-6">
         <button class="btn-criar" id="btnCriar">
           <svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
           Criar sala
         </button>
-        <span class="btn-hint">Grátis · Sem cadastro</span>
       </div>
 
       <div class="url-box" id="urlBox">
@@ -675,43 +839,214 @@ const LANDING_HTML = `<!DOCTYPE html>
 
   <footer class="footer">Next Cup · Transmissões ao vivo · nextcuptransmissoes.online</footer>
 
+  <!-- ═══════════════════ MODAL TUTORIAL ═══════════════════ -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-card" id="modalCard">
+
+      <!-- Cabeçalho -->
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Iniciar no Discord
+        </div>
+        <button class="modal-close" id="modalClose">✕</button>
+      </div>
+
+      <!-- Passo 1: conectar Discord -->
+      <div class="modal-step" id="step1">
+        <div class="step-label"><span class="step-badge">1</span> Conecte sua conta</div>
+        <p class="step-text">Clique no botão abaixo para autenticar com o Discord. Vamos pegar sua foto e nome automaticamente.</p>
+        <button class="modal-btn-discord" id="modalBtnLogin">
+          <svg viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
+          </svg>
+          Conectar Discord
+        </button>
+      </div>
+
+      <!-- Passo 2: card do usuário + canal de voz (aparece após login) -->
+      <div class="modal-step" id="step2" hidden>
+        <div class="step-label"><span class="step-badge done">✓</span> Conectado</div>
+
+        <!-- Card do usuário -->
+        <div class="user-card" id="modalUserCard">
+          <img class="user-card-av" id="modalUserAv" src="" alt="">
+          <div class="user-card-info">
+            <div class="user-card-name" id="modalUserName">…</div>
+            <div class="user-card-tag">Conta Discord</div>
+          </div>
+        </div>
+
+        <!-- Canal de voz -->
+        <div class="step-label" style="margin-top:18px"><span class="step-badge">2</span> Canal de voz detectado</div>
+        <p class="step-text">O bot identificou o canal onde você está. Clique em conectar para iniciar a Activity.</p>
+
+        <div class="voice-channel-row" id="voiceChannelRow">
+          <div class="voice-channel-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </div>
+          <div class="voice-channel-name" id="voiceChannelName">Buscando…</div>
+          <div class="voice-channel-status" id="voiceChannelStatus"></div>
+        </div>
+
+        <div class="modal-error" id="modalError" hidden></div>
+
+        <button class="modal-btn-connect" id="btnConnect" disabled>
+          <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+          Conectar bot
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Botão flutuante "?" para abrir o modal -->
+  <button class="modal-trigger" id="modalTrigger" title="Como usar no Discord">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+  </button>
+
   <script>
     const CLIENT_ID = '1540951591685853305';
     const REDIRECT  = location.origin + location.pathname;
 
-    // ── Remove splash após animações ──
+    // ── Remove splash ──
     setTimeout(() => {
-      const splash = document.getElementById('splash');
-      if (splash) {
-        splash.classList.add('out');
-        setTimeout(() => splash.remove(), 600);
-      }
+      const s = document.getElementById('splash');
+      if (s) { s.classList.add('out'); setTimeout(() => s.remove(), 600); }
     }, 900);
 
+    // ── Estado global ──
+    let discordToken = null;
+    let discordUser  = null;
+    let guildId      = null;
+    let channelId    = null;
+
+    // ── Topbar: botão login principal ──
     const btnLogin = document.getElementById('btnLogin');
     const userPill = document.getElementById('userPill');
     const userAv   = document.getElementById('userAvatar');
     const userNm   = document.getElementById('userName');
 
-    function applyUser(u) {
+    function applyUser(u, tok) {
+      discordToken = tok;
+      discordUser  = u;
       const av = u.avatar
-        ? 'https://cdn.discordapp.com/avatars/'+u.id+'/'+u.avatar+'.png?size=64'
+        ? 'https://cdn.discordapp.com/avatars/'+u.id+'/'+u.avatar+'.png?size=128'
         : 'https://cdn.discordapp.com/embed/avatars/'+((Number(u.discriminator||0))%5)+'.png';
+      // Topbar
       userAv.src = av; userNm.textContent = u.global_name || u.username;
       btnLogin.style.display = 'none'; userPill.classList.add('visible');
+      // Modal passo 2
+      document.getElementById('modalUserAv').src = av;
+      document.getElementById('modalUserName').textContent = u.global_name || u.username;
+      document.getElementById('step1').hidden = true;
+      document.getElementById('step2').hidden = false;
+      fetchVoiceChannel(u);
     }
+
+    // Verifica retorno do OAuth no hash
     const hash = new URLSearchParams(location.hash.slice(1));
     const tok  = hash.get('access_token');
     if (tok) {
       history.replaceState(null,'',location.pathname+location.search);
       fetch('https://discord.com/api/users/@me',{headers:{Authorization:'Bearer '+tok}})
-        .then(r=>r.json()).then(applyUser).catch(()=>{});
+        .then(r=>r.json()).then(u => applyUser(u, tok)).catch(()=>{});
     }
-    btnLogin.addEventListener('click',()=>{
-      location.href='https://discord.com/oauth2/authorize?client_id='+CLIENT_ID
-        +'&redirect_uri='+encodeURIComponent(REDIRECT)+'&response_type=token&scope=identify';
+
+    function doOAuth() {
+      // Pede identify + guilds para sabermos em qual servidor está
+      location.href = 'https://discord.com/oauth2/authorize'
+        + '?client_id=' + CLIENT_ID
+        + '&redirect_uri=' + encodeURIComponent(REDIRECT)
+        + '&response_type=token'
+        + '&scope=identify%20guilds';
+    }
+
+    btnLogin.addEventListener('click', doOAuth);
+    document.getElementById('modalBtnLogin').addEventListener('click', doOAuth);
+
+    // ── Busca canal de voz ──
+    async function fetchVoiceChannel(u) {
+      const vcName  = document.getElementById('voiceChannelName');
+      const vcStatus = document.getElementById('voiceChannelStatus');
+      const btnConn = document.getElementById('btnConnect');
+      const errEl   = document.getElementById('modalError');
+      vcName.textContent = 'Buscando…';
+      errEl.hidden = true;
+
+      // Busca guilds do usuário para descobrir em qual servidor está
+      let guilds = [];
+      try {
+        const r = await fetch('https://discord.com/api/users/@me/guilds', {headers:{Authorization:'Bearer '+discordToken}});
+        guilds = await r.json();
+      } catch {}
+
+      // Tenta cada guild até achar o canal de voz
+      for (const g of (guilds||[])) {
+        try {
+          const r = await fetch('/api/voice-channel', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ access_token: discordToken, guild_id: g.id, user_id: u.id }),
+          });
+          if (!r.ok) continue;
+          const d = await r.json();
+          if (d.channel) {
+            vcName.textContent  = d.channel.name;
+            vcStatus.textContent = g.name;
+            guildId   = g.id;
+            channelId = d.channel.id;
+            btnConn.disabled = false;
+            return;
+          }
+        } catch {}
+      }
+      vcName.textContent = 'Nenhum canal encontrado';
+      errEl.textContent = 'Entre em um canal de voz no Discord e tente novamente.';
+      errEl.hidden = false;
+    }
+
+    // ── Botão conectar bot ──
+    document.getElementById('btnConnect').addEventListener('click', async () => {
+      const btnConn = document.getElementById('btnConnect');
+      const errEl   = document.getElementById('modalError');
+      btnConn.disabled = true;
+      btnConn.innerHTML = 'Conectando…';
+      errEl.hidden = true;
+
+      try {
+        const r = await fetch('/api/start-activity', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            access_token: discordToken,
+            guild_id: guildId,
+            channel_id: channelId,
+            user_id: discordUser.id,
+          }),
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'Erro ao conectar');
+        // Sucesso
+        btnConn.classList.add('connected');
+        btnConn.innerHTML = '<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg> Conectado';
+        // Abre o invite em nova aba
+        if (d.invite_url) window.open(d.invite_url, '_blank');
+      } catch(e) {
+        errEl.textContent = e.message;
+        errEl.hidden = false;
+        btnConn.disabled = false;
+        btnConn.innerHTML = '<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg> Tentar novamente';
+      }
     });
 
+    // ── Abrir/fechar modal ──
+    const overlay = document.getElementById('modalOverlay');
+    document.getElementById('modalTrigger').addEventListener('click', () => overlay.classList.add('open'));
+    document.getElementById('modalClose').addEventListener('click',   () => overlay.classList.remove('open'));
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+
+    // ── Criar sala ──
     const btnCriar = document.getElementById('btnCriar');
     const urlBox   = document.getElementById('urlBox');
     const urlInput = document.getElementById('urlInput');
