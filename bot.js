@@ -15,7 +15,7 @@ if (!BOT_TOKEN) {
 const { Client, GatewayIntentBits, ActivityType, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SeparatorSpacingSize, MessageFlags } = require('discord.js');
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 });
 
 client.once('ready', () => {
@@ -167,4 +167,21 @@ module.exports = {
   logTransmissaoEncerrada,
   logSalaCriada,
   logSalaFechada,
+  /**
+   * Retorna o canal de voz onde o usuário está.
+   * @param {string} guildId
+   * @param {string} userId
+   * @returns {Promise<{id:string, name:string}|null>}
+   */
+  async getVoiceChannel(guildId, userId) {
+    try {
+      const guild = await client.guilds.fetch(guildId);
+      await guild.members.fetch(userId);
+      const member = guild.members.cache.get(userId);
+      if (!member?.voice?.channel) return null;
+      return { id: member.voice.channel.id, name: member.voice.channel.name };
+    } catch {
+      return null;
+    }
+  },
 };
