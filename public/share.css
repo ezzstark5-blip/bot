@@ -1,12 +1,12 @@
 :root {
-  --bg: #1a1b1e;
-  --card: #232428;
-  --line: #35373c;
+  --bg: #0a0a0a;
+  --card: #111214;
+  --line: #2a1010;
   --text: #f2f3f5;
   --muted: #9b9ea3;
-  --accent: #5865f2;
-  --danger: #da373c;
-  --ok: #23a55a;
+  --accent: #c62828;
+  --danger: #ff1744;
+  --ok: #f44336;
 }
 
 * {
@@ -111,10 +111,17 @@ button:disabled {
 
 .primary {
   background: var(--accent);
+  box-shadow: 0 0 16px rgba(198, 40, 40, 0.25);
+  transition: box-shadow .2s;
+}
+
+.primary:hover {
+  box-shadow: 0 0 24px rgba(198, 40, 40, 0.4);
 }
 
 .danger {
   background: var(--danger);
+  box-shadow: 0 0 12px rgba(255, 23, 68, 0.2);
 }
 
 .live-badge {
@@ -124,7 +131,7 @@ button:disabled {
   margin-bottom: 14px;
   padding: 5px 12px;
   border-radius: 999px;
-  background: rgba(35, 165, 90, 0.14);
+  background: rgba(198, 40, 40, 0.18);
   color: var(--ok);
   font-size: 13px;
   font-weight: 600;
