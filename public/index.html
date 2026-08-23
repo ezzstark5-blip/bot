@@ -193,6 +193,20 @@
       z-index: 5; pointer-events: none;
     }
 
+    /* Botão X do tile principal — aparece só no hover */
+    .close-main {
+      position: absolute; top: 10px; right: 10px;
+      width: 28px; height: 28px;
+      background: rgba(0,0,0,.72); border: 1px solid #555; border-radius: 6px;
+      color: #fff; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; z-index: 10;
+      opacity: 0; pointer-events: none;
+      transition: opacity .15s, background .15s;
+    }
+    .main-tile:hover .close-main { opacity: 1; pointer-events: auto; }
+    .close-main:hover { background: #c62828; border-color: #c62828; }
+
     /* ========== MODO TELA CHEIA (sidebar oculta) ========== */
     body.fullscreen-mode .sidebar { display: none; }
     body.fullscreen-mode .topbar  { display: none; }
@@ -441,6 +455,8 @@
       <!-- Tile de stream principal (canvas injetado pelo JS) -->
       <div id="mainTile" class="main-tile" hidden>
         <!-- canvas vai aqui -->
+        <!-- Botão X para desfocalizar — aparece ao hover -->
+        <button id="closeMain" class="close-main" title="Fechar">✕</button>
         <!-- Label "você" canto superior direito (só aparece se for a sua própria stream) -->
         <div class="you-label" id="youLabel" hidden>você</div>
         <!-- Barra inferior: nome + contador -->
@@ -814,7 +830,10 @@
     function renderParticipantsGrid() {
       const grid = $('participantsGrid');
       grid.innerHTML = '';
-      if (players.size > 0) { grid.hidden = true; return; }
+      // Esconde o grid apenas se houver uma stream em destaque no centro.
+      // Se todas foram fechadas (desfocadas) mas ainda existem na sidebar,
+      // mostra o grid de participantes mesmo assim.
+      if (focusedSlot != null) { grid.hidden = true; return; }
       grid.hidden = false;
       if (!participants.length) return;
       for (const p of participants) {
@@ -1055,6 +1074,24 @@
       for (const s of streams) addStream(s);
       updatePeople();
     }
+
+    // ── botão X do tile principal ──────────────────────────────────────────
+    $('closeMain').addEventListener('click', () => {
+      if (focusedSlot == null) return;
+      const p = players.get(focusedSlot);
+      if (p) {
+        // Devolve canvas para a sidebar
+        p.canvasWrap.insertBefore(p.canvas, p.canvasWrap.firstChild);
+        p.canvas.style.cssText = '';
+        p.sideItem.classList.remove('is-focused');
+      }
+      focusedSlot = null;
+      $('mainTile').hidden = true;
+      $('idleView').hidden = false;
+      renderParticipantsGrid();
+      updateSidebar();
+      updatePeople();
+    });
 
     // ── tela cheia ─────────────────────────────────────────────────────────
     function toggleFullscreen() {
