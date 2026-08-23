@@ -251,6 +251,12 @@
     .side-action-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     .side-stream-item.is-focused { outline: 2px solid #c62828; outline-offset: -2px; cursor: default; }
     .side-stream-item.is-focused .side-overlay-watch { display: none; }
+    /* Quando NÃO está em destaque: hover mostra só o botão expand (⛶), esconde ✕ */
+    .side-stream-item:not(.is-focused) .side-action-btn.close-side { display: none; }
+    /* Quando está em destaque (is-focused): hover mostra só o ✕, esconde expand */
+    .side-stream-item.is-focused .side-action-btn.expand { display: none; }
+    /* No item focado o hover não escurece o fundo (canvas está no mainTile) */
+    .side-stream-item.is-focused:hover .side-overlay-hover { background: rgba(0,0,0,.3); }
     .side-stream-item:not(.is-focused) .side-canvas-wrap canvas { opacity: 0.45; }
     .side-stream-name {
       display: flex; align-items: center; gap: 5px;
@@ -632,10 +638,27 @@
         hoverOverlay.className = 'side-overlay-hover';
 
         const btnClose = document.createElement('button');
-        btnClose.className = 'side-action-btn';
+        btnClose.className = 'side-action-btn close-side';
         btnClose.title = 'Fechar';
         btnClose.textContent = '✕';
-        btnClose.addEventListener('click', (e) => { e.stopPropagation(); closeStream(this.slot); });
+        btnClose.addEventListener('click', (e) => {
+          e.stopPropagation();
+          // Só desfocaliza — não destrói o player
+          if (focusedSlot === this.slot) {
+            const p = players.get(this.slot);
+            if (p) {
+              p.canvasWrap.insertBefore(p.canvas, p.canvasWrap.firstChild);
+              p.canvas.style.cssText = '';
+              p.sideItem.classList.remove('is-focused');
+            }
+            focusedSlot = null;
+            $('mainTile').hidden = true;
+            $('idleView').hidden = false;
+            renderParticipantsGrid();
+            updateSidebar();
+            updatePeople();
+          }
+        });
 
         const btnExpand = document.createElement('button');
         btnExpand.className = 'side-action-btn expand';
