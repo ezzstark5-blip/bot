@@ -295,12 +295,33 @@
     }
     .settings-btn:hover { border-color: #c62828; color: #fff; }
     .settings-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    .mute-btn {
+      background: none;
+      border: 1px solid #2a1010;
+      border-radius: 8px;
+      padding: 6px;
+      cursor: pointer;
+      color: #b5bac1;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s;
+    }
+    body.live .mute-btn { display: flex; }
+    .mute-btn:hover { border-color: #c62828; color: #fff; }
+    .mute-btn.muted { color: #ff1744; border-color: #ff1744; }
+    .mute-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   </style>
 </head>
 <body>
   <div class="topbar">
     <img class="logo" src="/foto/1321a2929b5943c3cc2be6e3722c2552.png" alt="NEXT">
     <div id="people" class="pill">…</div>
+    <button class="mute-btn" id="muteBtn" title="Mutear áudio" aria-label="Mutear áudio">
+      <svg id="micOn" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      <svg id="micOff" viewBox="0 0 24 24" style="display:none"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2c0 .76-.13 1.49-.35 2.17"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+    </button>
     <button class="settings-btn" id="settingsBtn" title="Qualidade da transmissão" aria-label="Qualidade">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1z"/></svg>
     </button>
@@ -571,6 +592,7 @@
         if (this.audioCtx || !window.AudioDecoder || !this.audioConfig) return null;
         try {
           this.audioCtx = new AudioContext({ sampleRate: this.audioConfig.sampleRate || 48000 });
+          if (audioMuted) this.audioCtx.suspend().catch(() => {});
           this.audioDecoder = new AudioDecoder({
             output: (ad) => this.play(ad),
             error: () => {},
@@ -591,7 +613,7 @@
         if (!window.AudioDecoder) return;
         const ctx = this.ensureAudio();
         if (!ctx) return;
-        if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+        if (!audioMuted && ctx.state === 'suspended') ctx.resume().catch(() => {});
 
         const dv = new DataView(buffer);
         const ts = dv.getFloat64(2);
@@ -784,6 +806,29 @@
     $('btnTela').addEventListener('click', () => abrirShare('tela'));
     $('btnCamera').addEventListener('click', () => abrirShare('camera'));
 
+    // --- Mute ---
+    let audioMuted = localStorage.getItem('nextMuted') === 'true';
+
+    function applyMute() {
+      for (const p of players.values()) {
+        if (p.audioCtx) {
+          if (audioMuted) p.audioCtx.suspend().catch(() => {});
+          else p.audioCtx.resume().catch(() => {});
+        }
+      }
+      $('micOn').style.display = audioMuted ? 'none' : '';
+      $('micOff').style.display = audioMuted ? '' : 'none';
+      $('muteBtn').classList.toggle('muted', audioMuted);
+      $('muteBtn').title = audioMuted ? 'Desmutear áudio' : 'Mutear áudio';
+    }
+    applyMute();
+
+    $('muteBtn').addEventListener('click', () => {
+      audioMuted = !audioMuted;
+      localStorage.setItem('nextMuted', audioMuted);
+      applyMute();
+    });
+
     // --- Qualidade ---
     const QUALITIES = [
       { q: '1500000', fps: '30', label: 'Leve', info: '30 fps · 1,5 Mb/s' },
@@ -821,9 +866,11 @@
     });
 
     // Navegador só deixa o áudio tocar depois de um gesto: qualquer clique
-    // na página retoma os contextos que nasceram suspensos.
+    // na página retoma os contextos que nasceram suspensos (se não estiver mutado).
     document.addEventListener('click', () => {
-      for (const p of players.values()) p.audioCtx?.resume?.().catch?.(() => {});
+      if (!audioMuted) {
+        for (const p of players.values()) p.audioCtx?.resume?.().catch?.(() => {});
+      }
     }, { capture: true });
 
     (async () => {
