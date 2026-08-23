@@ -404,89 +404,278 @@ const LANDING_HTML = `<!DOCTYPE html>
     body{
       font-family:'Segoe UI',system-ui,sans-serif;
       background:#0d0d0f;color:#f2f3f5;
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
       min-height:100vh;position:relative;
     }
-    .bg{position:fixed;inset:0;z-index:0;pointer-events:none;
-      background:linear-gradient(180deg,rgba(10,10,14,.5) 0%,rgba(10,10,14,.92) 55%,#0d0d0f 100%),
-      url('/foto/Next_-_Banner.png') center/cover no-repeat;}
-    .glow{position:fixed;inset:0;z-index:0;pointer-events:none;
-      background:radial-gradient(ellipse 70% 45% at 50% 0%,rgba(198,40,40,.2) 0%,transparent 70%);}
-    .center{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;padding:24px;}
-    .logo{width:76px;height:76px;border-radius:20px;object-fit:contain;box-shadow:0 8px 36px rgba(198,40,40,.4);}
-    .brand{font-size:2.2rem;font-weight:800;letter-spacing:-.5px;
-      background:linear-gradient(135deg,#fff 30%,#ef5350 100%);
-      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-    .tagline{font-size:.93rem;color:#8a8e93;max-width:300px;line-height:1.55;}
+
+    /* ── Fundo banner ── */
+    .bg{
+      position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:
+        linear-gradient(to right,rgba(8,9,12,.92) 38%,rgba(8,9,12,.55) 70%,rgba(8,9,12,.1) 100%),
+        url('/foto/Next_-_Banner.png') center/cover no-repeat;
+    }
+    .bg-bottom{
+      position:fixed;bottom:0;left:0;right:0;height:180px;z-index:0;pointer-events:none;
+      background:linear-gradient(0deg,#0d0d0f 0%,transparent 100%);
+    }
+
+    /* ── Topbar ── */
+    .topbar{
+      position:fixed;top:0;left:0;right:0;z-index:10;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:16px 32px;
+    }
+    .topbar-left{display:flex;align-items:center;gap:10px;}
+    .topbar-logo{width:32px;height:32px;border-radius:8px;object-fit:contain;}
+    .topbar-name{font-size:.85rem;font-weight:700;color:#fff;letter-spacing:.02em;}
+    .topbar-sep{width:1px;height:16px;background:rgba(255,255,255,.15);}
+    .topbar-sub{font-size:.78rem;color:rgba(255,255,255,.4);}
+
+    /* Botão conectar Discord (topbar direita) */
+    .btn-discord{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 18px;
+      background:#5865f2;border:none;border-radius:999px;
+      color:#fff;font-size:.82rem;font-weight:600;cursor:pointer;
+      box-shadow:0 2px 12px rgba(88,101,242,.4);
+      transition:transform .15s,box-shadow .15s;
+      text-decoration:none;
+    }
+    .btn-discord:hover{transform:scale(1.04);box-shadow:0 4px 20px rgba(88,101,242,.6);}
+    .btn-discord svg{width:16px;height:16px;fill:#fff;flex-shrink:0;}
+
+    /* Avatar após login */
+    .user-pill{
+      display:none;align-items:center;gap:8px;
+      background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+      border-radius:999px;padding:4px 14px 4px 4px;
+    }
+    .user-pill.visible{display:flex;}
+    .user-pill img{width:28px;height:28px;border-radius:50%;object-fit:cover;}
+    .user-pill span{font-size:.82rem;font-weight:600;color:#f2f3f5;}
+
+    /* ── Conteúdo principal ── */
+    .main{
+      position:relative;z-index:1;
+      min-height:100vh;
+      display:flex;align-items:center;
+      padding:0 32px;
+      max-width:580px;
+    }
+    .content{display:flex;flex-direction:column;gap:20px;padding-top:80px;}
+
+    .eyebrow{
+      display:inline-flex;align-items:center;gap:8px;
+      font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+      color:rgba(255,255,255,.45);
+    }
+    .eyebrow-dot{width:6px;height:6px;border-radius:50%;background:#c62828;}
+
+    h1{
+      font-size:clamp(2rem,5vw,3rem);font-weight:800;line-height:1.1;
+      letter-spacing:-.5px;color:#fff;
+    }
+
+    .desc{
+      font-size:.95rem;color:rgba(255,255,255,.55);
+      line-height:1.6;max-width:420px;
+    }
+
+    /* Lista de features */
+    .features{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
+    .feature{
+      display:flex;align-items:center;gap:12px;
+      font-size:.84rem;color:rgba(255,255,255,.5);
+    }
+    .feature-icon{
+      width:28px;height:28px;border-radius:7px;
+      background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    }
+    .feature-icon svg{width:14px;height:14px;fill:none;stroke:rgba(255,255,255,.55);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+    /* Botão criar sala */
     .btn-criar{
       display:inline-flex;align-items:center;gap:9px;
-      padding:13px 34px;background:#c62828;border:none;border-radius:999px;
-      color:#fff;font-size:1rem;font-weight:700;cursor:pointer;
-      box-shadow:0 4px 24px rgba(198,40,40,.45);transition:transform .15s,box-shadow .15s;
-      margin-top:4px;
+      padding:13px 28px;
+      background:#c62828;border:none;border-radius:10px;
+      color:#fff;font-size:.95rem;font-weight:700;cursor:pointer;
+      box-shadow:0 4px 24px rgba(198,40,40,.4);
+      transition:transform .15s,box-shadow .15s;
+      align-self:flex-start;margin-top:4px;
     }
-    .btn-criar:hover{transform:scale(1.04);box-shadow:0 6px 34px rgba(198,40,40,.65);}
-    .btn-criar:active{transform:scale(.98);}
-    .btn-criar:disabled{opacity:.6;cursor:not-allowed;transform:none;}
-    .btn-criar svg{width:17px;height:17px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
-    .url-box{display:none;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:440px;margin-top:4px;}
+    .btn-criar:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(198,40,40,.55);}
+    .btn-criar:active{transform:translateY(0);}
+    .btn-criar:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+    .btn-criar svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+
+    /* Caixa de URL */
+    .url-box{display:none;flex-direction:column;gap:8px;width:100%;max-width:460px;}
     .url-box.on{display:flex;}
-    .url-label{font-size:.73rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#555;}
-    .url-row{display:flex;align-items:center;gap:8px;width:100%;background:#18191c;border:1px solid #2a2c30;border-radius:10px;padding:10px 14px;}
-    .url-input{flex:1;font-size:.82rem;color:#b5bac1;background:none;border:none;outline:none;font-family:inherit;cursor:default;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .url-label{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.3);}
+    .url-row{
+      display:flex;align-items:center;gap:8px;
+      background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+      border-radius:10px;padding:10px 14px;
+    }
+    .url-input{flex:1;font-size:.82rem;color:#b5bac1;background:none;border:none;outline:none;font-family:inherit;cursor:default;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     .btn-copy{flex-shrink:0;background:#c62828;border:none;border-radius:7px;padding:6px 14px;color:#fff;font-size:.78rem;font-weight:600;cursor:pointer;transition:background .15s;}
     .btn-copy:hover{background:#d32f2f;}
     .btn-copy.ok{background:#2e7d32;}
-    .hint{font-size:.76rem;color:#555;line-height:1.45;max-width:380px;}
-    .footer{position:fixed;bottom:16px;font-size:.7rem;color:#2e3035;z-index:1;}
+    .url-hint{font-size:.74rem;color:rgba(255,255,255,.28);line-height:1.4;}
   </style>
 </head>
 <body>
   <div class="bg"></div>
-  <div class="glow"></div>
-  <div class="center">
-    <img class="logo" src="/foto/1321a2929b5943c3cc2be6e3722c2552.png" alt="NEXT">
-    <div class="brand">Next Cup</div>
-    <p class="tagline">Transmissões ao vivo dentro do Discord, sem sair do servidor.</p>
-    <button class="btn-criar" id="btnCriar">
-      <svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-      Criar sala
+  <div class="bg-bottom"></div>
+
+  <!-- Topbar -->
+  <nav class="topbar">
+    <div class="topbar-left">
+      <img class="topbar-logo" src="/foto/1321a2929b5943c3cc2be6e3722c2552.png" alt="NEXT">
+      <span class="topbar-name">NEXT CUP</span>
+      <div class="topbar-sep"></div>
+      <span class="topbar-sub">transmissões</span>
+    </div>
+
+    <!-- Antes do login -->
+    <button class="btn-discord" id="btnLogin">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.032.054a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
+      </svg>
+      Conectar Discord
     </button>
-    <div class="url-box" id="urlBox">
-      <span class="url-label">Link da sala</span>
-      <div class="url-row">
-        <input class="url-input" id="urlInput" readonly>
-        <button class="btn-copy" id="btnCopy">Copiar</button>
+
+    <!-- Após o login -->
+    <div class="user-pill" id="userPill">
+      <img id="userAvatar" src="" alt="">
+      <span id="userName"></span>
+    </div>
+  </nav>
+
+  <!-- Conteúdo -->
+  <div class="main">
+    <div class="content">
+      <div class="eyebrow">
+        <span class="eyebrow-dot"></span>
+        Next Cup
       </div>
-      <p class="hint">Envie este link para quem vai transmitir ou assistir. O link expira quando a sala fechar.</p>
+
+      <h1>Sua tela, ao vivo,<br>direto para a sala.</h1>
+
+      <p class="desc">
+        Crie uma sala em um clique, compartilhe o código e
+        transmita a tela pelo navegador. Sem instalar nada, sem cadastro.
+      </p>
+
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          Sala instantânea, entra por código ou link
+        </div>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          O vídeo vai de um navegador ao outro, sem passar pelo servidor
+        </div>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          Várias pessoas podem transmitir ao mesmo tempo
+        </div>
+      </div>
+
+      <button class="btn-criar" id="btnCriar">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+        Criar sala
+      </button>
+
+      <div class="url-box" id="urlBox">
+        <span class="url-label">Link da sala</span>
+        <div class="url-row">
+          <input class="url-input" id="urlInput" readonly>
+          <button class="btn-copy" id="btnCopy">Copiar</button>
+        </div>
+        <p class="url-hint">Envie este link para quem vai transmitir ou assistir.</p>
+      </div>
     </div>
   </div>
-  <p class="footer">Next Cup · Transmissões ao vivo</p>
+
   <script>
-    const btn=document.getElementById('btnCriar');
-    const box=document.getElementById('urlBox');
-    const inp=document.getElementById('urlInput');
-    const cpy=document.getElementById('btnCopy');
-    btn.addEventListener('click',async()=>{
-      btn.disabled=true;btn.innerHTML='Criando…';
-      try{
-        const r=await fetch('/api/room',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
-        const d=await r.json();
-        if(!r.ok)throw new Error(d.error||'Erro');
-        const u=new URL(location.href);
-        u.pathname='/';u.search='';
-        u.searchParams.set('room',d.roomId);
-        u.searchParams.set('t',d.viewerToken);
-        inp.value=u.toString();
-        box.classList.add('on');
-        btn.innerHTML='<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 5v14"/><path d="M5 12h14"/></svg> Criar outra sala';
-        btn.disabled=false;
-      }catch(e){btn.innerHTML='Erro — tente novamente';btn.disabled=false;}
+    // ── OAuth Discord (apenas pega foto e nome, sem backend) ──
+    const CLIENT_ID = '1540951591685853305';
+    const REDIRECT   = location.origin + location.pathname;
+    const SCOPES     = 'identify';
+
+    const btnLogin = document.getElementById('btnLogin');
+    const userPill = document.getElementById('userPill');
+    const userAv   = document.getElementById('userAvatar');
+    const userName = document.getElementById('userName');
+
+    function applyUser(user) {
+      const av = user.avatar
+        ? 'https://cdn.discordapp.com/avatars/' + user.id + '/' + user.avatar + '.png?size=64'
+        : 'https://cdn.discordapp.com/embed/avatars/' + ((Number(user.discriminator||0)) % 5) + '.png';
+      userAv.src = av;
+      userName.textContent = user.global_name || user.username;
+      btnLogin.style.display = 'none';
+      userPill.classList.add('visible');
+    }
+
+    // Verifica se voltou do OAuth com token no hash
+    const hash = new URLSearchParams(location.hash.slice(1));
+    const token = hash.get('access_token');
+    if (token) {
+      history.replaceState(null,'',location.pathname + location.search);
+      fetch('https://discord.com/api/users/@me', { headers:{ Authorization:'Bearer '+token } })
+        .then(r=>r.json()).then(applyUser).catch(()=>{});
+    }
+
+    // Clique no botão Discord
+    btnLogin.addEventListener('click', () => {
+      const url = 'https://discord.com/oauth2/authorize'
+        + '?client_id=' + CLIENT_ID
+        + '&redirect_uri=' + encodeURIComponent(REDIRECT)
+        + '&response_type=token'
+        + '&scope=' + SCOPES;
+      location.href = url;
     });
-    cpy.addEventListener('click',()=>{
-      navigator.clipboard.writeText(inp.value).then(()=>{
-        cpy.textContent='Copiado!';cpy.classList.add('ok');
-        setTimeout(()=>{cpy.textContent='Copiar';cpy.classList.remove('ok');},2000);
+
+    // ── Criar sala ──
+    const btnCriar = document.getElementById('btnCriar');
+    const urlBox   = document.getElementById('urlBox');
+    const urlInput = document.getElementById('urlInput');
+    const btnCopy  = document.getElementById('btnCopy');
+
+    btnCriar.addEventListener('click', async () => {
+      btnCriar.disabled = true;
+      btnCriar.innerHTML = 'Criando…';
+      try {
+        const r = await fetch('/api/room', { method:'POST', headers:{'Content-Type':'application/json'}, body:'{}' });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error||'Erro');
+        const u = new URL(location.origin);
+        u.searchParams.set('room', d.roomId);
+        u.searchParams.set('t', d.viewerToken);
+        urlInput.value = u.toString();
+        urlBox.classList.add('on');
+        btnCriar.innerHTML = '<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 5v14"/><path d="M5 12h14"/></svg> Criar outra sala';
+        btnCriar.disabled = false;
+      } catch(e) {
+        btnCriar.innerHTML = 'Erro — tente novamente';
+        btnCriar.disabled = false;
+      }
+    });
+
+    btnCopy.addEventListener('click', () => {
+      navigator.clipboard.writeText(urlInput.value).then(() => {
+        btnCopy.textContent = 'Copiado!';
+        btnCopy.classList.add('ok');
+        setTimeout(() => { btnCopy.textContent = 'Copiar'; btnCopy.classList.remove('ok'); }, 2000);
       });
     });
   </script>
