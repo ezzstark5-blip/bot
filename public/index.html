@@ -6,7 +6,7 @@
   <title>Next Transmissões</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { height: 100%; }
+    html, body { height: 100%; overflow: hidden; }
     body {
       font-family: 'Segoe UI', sans-serif;
       background: #000;
@@ -19,7 +19,9 @@
       align-items: center;
       gap: 8px;
       padding: 10px 14px;
+      flex-shrink: 0;
     }
+    body.live .topbar { padding: 4px 10px; }
     .pill {
       background: #1e1f22;
       border-radius: 999px;
@@ -27,6 +29,7 @@
       font-size: 0.85rem;
       color: #b5bac1;
     }
+    body.live .pill { font-size: 0.75rem; padding: 3px 10px; }
     .user-chip {
       display: flex;
       align-items: center;
@@ -37,16 +40,24 @@
       padding: 4px 12px 4px 4px;
       font-size: 0.85rem;
     }
+    body.live .user-chip { display: none; }
     .user-chip img { width: 26px; height: 26px; border-radius: 50%; }
 
     main.grid {
       flex: 1;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 10px;
-      padding: 0 14px 10px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 8px;
+      padding: 0 10px 8px;
       overflow-y: auto;
       align-content: start;
+      min-height: 0;
+    }
+    body.live main.grid {
+      align-content: stretch;
+      grid-auto-rows: 1fr;
+      gap: 0;
+      padding: 0;
     }
     .tile {
       position: relative;
@@ -55,9 +66,16 @@
       overflow: hidden;
       aspect-ratio: 16 / 9;
       cursor: pointer;
+      min-height: 0;
     }
-    .tile.full { grid-column: 1 / -1; aspect-ratio: auto; height: 70vh; }
+    body.live .tile { border-radius: 0; aspect-ratio: auto; height: 100%; }
+    body.live main.grid:has(.tile:nth-child(1):last-child) .tile {
+      width: 100%;
+      height: 100%;
+    }
+    .tile.full { grid-column: 1 / -1; aspect-ratio: auto; }
     .tile canvas { width: 100%; height: 100%; object-fit: contain; display: block; }
+    body.live .tile canvas { object-fit: contain; }
     .tile .label {
       position: absolute;
       left: 8px;
@@ -94,6 +112,7 @@
       gap: 8px;
       padding: 20px;
     }
+    body.live .empty { display: none; }
     .empty .icon { font-size: 3rem; }
     .empty h1 { font-size: 1.2rem; font-weight: 600; }
     .muted { color: #949ba4; font-size: 0.9rem; }
@@ -106,7 +125,11 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .bottombar { padding: 12px 14px 16px; }
+    .bottombar {
+      flex-shrink: 0;
+      padding: 10px 14px 14px;
+    }
+    body.live .bottombar { display: none; }
     .dock {
       display: flex;
       justify-content: center;
@@ -477,7 +500,9 @@
 
     function updatePeople() {
       const n = session ? participantsCount() : 0;
-      $('people').textContent = players.size
+      const aoVivo = players.size > 0;
+      document.body.classList.toggle('live', aoVivo);
+      $('people').textContent = aoVivo
         ? `${players.size} transmitindo · ${n} na sala`
         : `${n} na sala`;
     }
