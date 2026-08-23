@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Página de captura externa.
  *
  * Só existe como alternativa: quando o Discord não concede `display-capture` ao
@@ -38,7 +38,7 @@ const TITULO = document.title;
  */
 const opcoes = {
   bitrate: Number(query.get('q')) || 2_500_000,
-  fps: Number(query.get('fps')) || 30,
+  fps: Number(query.get('fps')) || 60,
 };
 
 function aplicarOpcoes(novas) {
