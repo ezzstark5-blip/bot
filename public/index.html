@@ -517,12 +517,12 @@
   <div id="qualityModal" class="modal" hidden>
     <div class="modal-card">
       <h2>Qualidade da transmissão</h2>
-      <p class="sub">A opção equilibrada é a melhor para a maioria. 60 fps exige mais upload e codificação por hardware.</p>
+      <p class="sub">A opção equilibrada é a melhor para a maioria. 90 e 120 fps exigem mais upload e hardware.</p>
       <div class="quality-grid">
-        <button class="quality-opt" data-q="1500000" data-fps="30"><span class="qlabel">Leve</span><span class="qinfo">1,5 Mb/s · 30 fps</span></button>
-        <button class="quality-opt active" data-q="2500000" data-fps="30"><span class="qlabel">Equilibrado</span><span class="qinfo">2,5 Mb/s · 30 fps</span></button>
-        <button class="quality-opt" data-q="5000000" data-fps="60"><span class="qlabel">Nítido</span><span class="qinfo">5 Mb/s · 60 fps</span></button>
-        <button class="quality-opt" data-q="8000000" data-fps="60"><span class="qlabel">Máximo</span><span class="qinfo">8 Mb/s · 60 fps</span></button>
+        <button class="quality-opt" data-q="1500000" data-fps="30"><span class="qlabel">30 fps</span><span class="qinfo">1,5 Mb/s · Leve</span></button>
+        <button class="quality-opt active" data-q="2500000" data-fps="60"><span class="qlabel">60 fps</span><span class="qinfo">2,5 Mb/s · Equilibrado</span></button>
+        <button class="quality-opt" data-q="5000000" data-fps="90"><span class="qlabel">90 fps</span><span class="qinfo">5 Mb/s · Nítido</span></button>
+        <button class="quality-opt" data-q="8000000" data-fps="120"><span class="qlabel">120 fps</span><span class="qinfo">8 Mb/s · Máximo</span></button>
       </div>
       <p class="modal-note">A resolução é limitada a 1080p. O navegador reduz quadros automaticamente se o computador não acompanhar.</p>
       <div class="modal-actions"><button class="modal-close-btn" id="qualityClose">Concluir</button></div>
@@ -1110,7 +1110,7 @@
     }, { capture: true });
 
     // ── qualidade ───────────────────────────────────────────────────────────
-    let selectedQuality = JSON.parse(localStorage.getItem('nextQuality') || 'null') || { q: '2500000', fps: '30' };
+    let selectedQuality = JSON.parse(localStorage.getItem('nextQuality') || 'null') || { q: '2500000', fps: '60' };
 
     function highlightQuality() {
       document.querySelectorAll('.quality-opt').forEach(el =>
