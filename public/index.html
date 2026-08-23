@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Next Transmissões</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #000;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+    }
+    .pill {
+      background: #1e1f22;
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      color: #b5bac1;
+    }
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+      background: #1e1f22;
+      border-radius: 999px;
+      padding: 4px 12px 4px 4px;
+      font-size: 0.85rem;
+    }
+    .user-chip img { width: 26px; height: 26px; border-radius: 50%; }
+
+    main.grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 10px;
+      padding: 0 14px 10px;
+      overflow-y: auto;
+      align-content: start;
+    }
+    .tile {
+      position: relative;
+      background: #111214;
+      border-radius: 12px;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      cursor: pointer;
+    }
+    .tile.full { grid-column: 1 / -1; aspect-ratio: auto; height: 70vh; }
+    .tile canvas { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .tile .label {
+      position: absolute;
+      left: 8px;
+      bottom: 8px;
+      background: rgba(0,0,0,.7);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 0.78rem;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .tile .badge {
+      background: #5865f2;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+    }
+    .live-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #23a55a; display: inline-block;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 50% { opacity: .4; } }
+
+    .empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 8px;
+      padding: 20px;
+    }
+    .empty .icon { font-size: 3rem; }
+    .empty h1 { font-size: 1.2rem; font-weight: 600; }
+    .muted { color: #949ba4; font-size: 0.9rem; }
+    .spinner {
+      width: 22px; height: 22px;
+      border: 3px solid #33363c;
+      border-top-color: #5865f2;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .bottombar { padding: 12px 14px 16px; }
+    .dock {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+    .btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 22px;
+      background: #5865f2;
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn:hover { background: #4752c4; transform: scale(1.03); }
+    .btn:disabled { background: #3f4147; cursor: not-allowed; transform: none; }
+    .btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 96px;
+      transform: translateX(-50%);
+      background: #1e1f22;
+      border: 1px solid #3f4147;
+      color: #dbdee1;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      z-index: 50;
+    }
+    .toast.err { border-color: #da373c; color: #ff9a9e; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div id="people" class="pill">…</div>
+    <div id="userChip" class="user-chip" hidden>
+      <img id="userAvatar" alt="">
+      <span id="userName">…</span>
+    </div>
+  </div>
+
+  <main id="grid" class="grid" hidden></main>
+
+  <div id="empty" class="empty">
+    <div class="icon">🖥️</div>
+    <h1 id="emptyTitle">Conectando…</h1>
+    <p id="emptyText" class="muted">Autenticando com o Discord</p>
+    <div class="spinner"></div>
+  </div>
+
+  <div class="bottombar">
+    <div class="dock">
+      <button class="btn" id="btnTela" disabled>
+        <svg viewBox="0 0 24 24"><path d="M3 5h18v11H3z"/><path d="M8 20h8"/></svg>
+        Tela
+      </button>
+      <button class="btn" id="btnCamera" disabled>
+        <svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        Câmera
+      </button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <script type="module">
+    import { DiscordSDK } from 'https://esm.sh/@discord/embedded-app-sdk';
+
+    const CLIENT_ID = '1540951591685853305';
+
+    // Dentro do iframe do Discord a URL tem frame_id e todo tráfego passa
+    // pelo proxy "/.proxy". Fora dele (teste direto no navegador), sem prefixo.
+    const BASE = new URLSearchParams(location.search).has('frame_id') ? '/.proxy' : '';
+
+    const $ = (id) => document.getElementById(id);
+
+    let discordSdk = null;
+    let session = null;   // resposta de /api/session
+    let ws = null;
+    let backoff = 1000;
+
+    const players = new Map(); // slot -> StreamPlayer
+
+    function toast(msg, err = false) {
+      const el = $('toast');
+      el.textContent = msg;
+      el.className = 'toast' + (err ? ' err' : '');
+      el.hidden = false;
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => (el.hidden = true), 4000);
+    }
+
+    async function api(pathName, body) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 15000);
+      try {
+        const res = await fetch(BASE + pathName, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          signal: ctrl.signal,
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.error || json.message || ('HTTP ' + res.status));
+        return json;
+      } finally {
+        clearTimeout(t);
+      }
+    }
+
+    // ---------------------------------------------------------- decodificação
+
+    function b64ToU8(b64) {
+      const bin = atob(b64);
+      const out = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+      return out;
+    }
+
+    /**
+     * Um stream da sala: recebe os pacotes binários do relay
+     * ([slot][tipo][ts f64][clock f64][payload]) e desenha vídeo (canvas,
+     * via VideoDecoder/WebCodecs) e som (AudioDecoder + WebAudio).
+     */
+    class StreamPlayer {
+      constructor(info) {
+        this.slot = info.slot;
+        this.info = info;
+        this.config = info.config || null;
+        this.audioConfig = info.audioConfig || null;
+
+        this.tile = document.createElement('div');
+        this.tile.className = 'tile';
+        this.tile.addEventListener('click', () => this.tile.classList.toggle('full'));
+        this.canvas = document.createElement('canvas');
+        this.ctx = this.canvas.getContext('2d', { alpha: false });
+        this.label = document.createElement('div');
+        this.label.className = 'label';
+        this.label.innerHTML =
+          '<span class="live-dot"></span><span></span><span class="badge"></span>';
+        this.label.children[1].textContent = info.name || 'Transmissão';
+        this.label.children[2].textContent = info.fonte === 'camera' ? 'cam' : 'tela';
+        this.tile.append(this.canvas, this.label);
+
+        this.decoder = null;
+        this.waitingKey = true;
+        this.pending = [];
+
+        this.audioDecoder = null;
+        this.audioCtx = null;
+        this.nextAudioAt = 0;
+      }
+
+      setVideoConfig(config) {
+        this.config = config;
+        this.flushPending();
+      }
+
+      setAudioConfig(config) {
+        this.audioConfig = config;
+      }
+
+      ensureDecoder() {
+        if (this.decoder || !this.config || !window.VideoDecoder) return;
+        const cfg = { ...this.config };
+        if (cfg.description && typeof cfg.description === 'string') {
+          cfg.description = b64ToU8(cfg.description);
+        }
+        cfg.optimizeForLatency = true;
+        try {
+          this.decoder = new VideoDecoder({
+            output: (frame) => this.draw(frame),
+            error: () => {
+              // Caiu (ex.: perdeu referência): espera um novo keyframe.
+              try { this.decoder.close(); } catch {}
+              this.decoder = null;
+              this.waitingKey = true;
+            },
+          });
+          this.decoder.configure(cfg);
+        } catch {
+          this.decoder = null;
+        }
+      }
+
+      flushPending() {
+        this.ensureDecoder();
+        const list = this.pending;
+        this.pending = [];
+        for (const chunk of list) this.feed(chunk);
+      }
+
+      pushBinary(buffer) {
+        const dv = new DataView(buffer);
+        const tipo = dv.getUint8(1);
+        if (tipo === 3) return this.pushAudio(buffer);
+        const ts = dv.getFloat64(2);
+        const data = new Uint8Array(buffer, 18);
+        const chunk = new EncodedVideoChunk({
+          type: tipo === 1 ? 'key' : 'delta',
+          timestamp: Number.isFinite(ts) ? ts : performance.now() * 1000,
+          data,
+        });
+        if (!this.decoder && this.pending.length < 120) {
+          this.pending.push(chunk);
+          this.flushPending();
+          return;
+        }
+        this.feed(chunk);
+      }
+
+      feed(chunk) {
+        if (chunk.type === 'key') this.waitingKey = false;
+        if (this.waitingKey) return; // sem ponto de partida, delta não serve
+        if (!this.decoder || this.decoder.state !== 'configured') return;
+        try {
+          this.decoder.decode(chunk);
+        } catch {}
+      }
+
+      draw(frame) {
+        if (frame.displayWidth && (this.canvas.width !== frame.displayWidth || this.canvas.height !== frame.displayHeight)) {
+          this.canvas.width = frame.displayWidth;
+          this.canvas.height = frame.displayHeight;
+        }
+        try {
+          this.ctx.drawImage(frame, 0, 0, this.canvas.width, this.canvas.height);
+        } catch {}
+        frame.close();
+      }
+
+      ensureAudio() {
+        if (this.audioCtx || !window.AudioDecoder || !this.audioConfig) return null;
+        try {
+          this.audioCtx = new AudioContext({ sampleRate: this.audioConfig.sampleRate || 48000 });
+          this.audioDecoder = new AudioDecoder({
+            output: (ad) => this.play(ad),
+            error: () => {},
+          });
+          this.audioDecoder.configure({
+            codec: this.audioConfig.codec || 'opus',
+            sampleRate: this.audioConfig.sampleRate || 48000,
+            numberOfChannels: this.audioConfig.numberOfChannels || 2,
+          });
+        } catch {
+          this.audioCtx = null;
+          this.audioDecoder = null;
+        }
+        return this.audioCtx;
+      }
+
+      pushAudio(buffer) {
+        if (!window.AudioDecoder) return;
+        const ctx = this.ensureAudio();
+        if (!ctx) return;
+        if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+
+        const dv = new DataView(buffer);
+        const ts = dv.getFloat64(2);
+        const data = new Uint8Array(buffer, 18);
+        if (!this.audioDecoder || this.audioDecoder.state !== 'configured') return;
+        try {
+          this.audioDecoder.decode(
+            new EncodedAudioChunk({
+              type: 'key',
+              timestamp: Number.isFinite(ts) ? ts : performance.now() * 1000,
+              data,
+            }),
+          );
+        } catch {}
+      }
+
+      play(audioData) {
+        const ctx = this.audioCtx;
+        if (!ctx || ctx.state !== 'running') {
+          audioData.close();
+          return;
+        }
+        const frames = audioData.numberOfFrames;
+        const channels = Math.min(2, audioData.numberOfChannels);
+        const buf = ctx.createBuffer(channels, frames, audioData.sampleRate);
+        for (let c = 0; c < channels; c++) {
+          const plane = new Float32Array(frames);
+          audioData.copyTo(plane, { planeIndex: c, format: 'f32-planar' });
+          buf.copyToChannel(plane, c);
+        }
+        audioData.close();
+
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(ctx.destination);
+        const at = Math.max(ctx.currentTime + 0.05, this.nextAudioAt);
+        src.start(at);
+        this.nextAudioAt = at + buf.duration;
+      }
+
+      destroy() {
+        try { this.decoder?.close(); } catch {}
+        try { this.audioDecoder?.close(); } catch {}
+        this.audioCtx?.close().catch?.(() => {});
+        this.tile.remove();
+      }
+    }
+
+    function addStream(info) {
+      if (players.has(info.slot)) return players.get(info.slot);
+      const p = new StreamPlayer(info);
+      players.set(info.slot, p);
+      $('grid').append(p.tile);
+      $('empty').hidden = true;
+      $('grid').hidden = false;
+      return p;
+    }
+
+    function removeStream(slot) {
+      const p = players.get(slot);
+      if (!p) return;
+      p.destroy();
+      players.delete(slot);
+      if (!players.size) {
+        $('grid').hidden = true;
+        showEmpty('Ninguém transmitindo', 'Use os botões abaixo para começar.');
+      }
+    }
+
+    function reconcile(streams) {
+      const alive = new Set(streams.map((s) => s.slot));
+      for (const slot of [...players.keys()]) if (!alive.has(slot)) removeStream(slot);
+      for (const s of streams) addStream(s);
+      updatePeople();
+    }
+
+    function updatePeople() {
+      const n = session ? participantsCount() : 0;
+      $('people').textContent = players.size
+        ? `${players.size} transmitindo · ${n} na sala`
+        : `${n} na sala`;
+    }
+
+    let participants = [];
+    const participantsCount = () => participants.length;
+
+    function showEmpty(title, text) {
+      $('emptyTitle').textContent = title;
+      $('emptyText').textContent = text;
+      $('empty').hidden = false;
+      $('empty').querySelector('.spinner')?.remove();
+    }
+
+    // ------------------------------------------------------------------ ws
+
+    function connectViewer() {
+      if (!session) return;
+      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+      ws = new WebSocket(`${proto}://${location.host}${BASE}/ws?t=${encodeURIComponent(session.viewerToken)}`);
+      ws.binaryType = 'arraybuffer';
+
+      let openedOnce = false;
+
+      ws.addEventListener('open', () => {
+        openedOnce = true;
+        backoff = 1000;
+        if (!players.size) showEmpty('Ninguém transmitindo', 'Use os botões abaixo para começar.');
+        updatePeople();
+      });
+
+      ws.addEventListener('message', (e) => {
+        if (typeof e.data !== 'string') {
+          const slot = new DataView(e.data).getUint8(0);
+          players.get(slot)?.pushBinary(e.data);
+          return;
+        }
+        let msg;
+        try { msg = JSON.parse(e.data); } catch { return; }
+
+        switch (msg.type) {
+          case 'state':
+            participants = msg.participants ?? [];
+            reconcile(msg.streams ?? []);
+            break;
+          case 'stream-start':
+            addStream(msg);
+            updatePeople();
+            break;
+          case 'stream-stop':
+            removeStream(msg.slot);
+            break;
+          case 'config': {
+            const p = players.get(msg.slot);
+            if (p) p.setVideoConfig(msg.config);
+            break;
+          }
+          case 'audio-config': {
+            const p = players.get(msg.slot);
+            if (p) p.setAudioConfig(msg.config);
+            break;
+          }
+          case 'room-gone':
+            toast('A sala foi fechada.', true);
+            break;
+          case 'error':
+            toast(msg.message || 'Erro na sala.', true);
+            break;
+        }
+      });
+
+      ws.addEventListener('close', () => {
+        for (const p of players.values()) p.destroy();
+        players.clear();
+        if (!session) return;
+        if (!openedOnce) showEmpty('Falhou', 'Não foi possível conectar à sala.');
+        else showEmpty('Reconectando…', 'A conexão com a sala caiu.');
+        setTimeout(connectViewer, backoff);
+        backoff = Math.min(backoff * 2, 15000);
+      });
+
+      ws.addEventListener('error', () => ws.close());
+    }
+
+    // ------------------------------------------------------------ arranque
+
+    async function abrirShare(fonte) {
+      if (!session) return;
+      const url = new URL(session.shareUrl);
+      url.searchParams.set('q', '2500000');
+      url.searchParams.set('fps', '30');
+      url.searchParams.set('fonte', fonte);
+
+      if (discordSdk?.commands?.openExternalLink) {
+        try {
+          const r = await discordSdk.commands.openExternalLink({ url: url.toString() });
+          if (r && r.opened === false) toast('Você recusou abrir o link.', true);
+          return;
+        } catch (err) {
+          toast('Não foi possível abrir o link: ' + err.message, true);
+          return;
+        }
+      }
+      window.open(url.toString(), '_blank');
+    }
+
+    $('btnTela').addEventListener('click', () => abrirShare('tela'));
+    $('btnCamera').addEventListener('click', () => abrirShare('camera'));
+
+    // Navegador só deixa o áudio tocar depois de um gesto: qualquer clique
+    // na página retoma os contextos que nasceram suspensos.
+    document.addEventListener('click', () => {
+      for (const p of players.values()) p.audioCtx?.resume?.().catch?.(() => {});
+    }, { capture: true });
+
+    (async () => {
+      try {
+        discordSdk = new DiscordSDK(CLIENT_ID);
+        await discordSdk.ready();
+
+        const { code } = await discordSdk.commands.authorize({
+          client_id: CLIENT_ID,
+          response_type: 'code',
+          state: '',
+          prompt: 'none',
+          scope: ['identify'],
+        });
+
+        const { access_token } = await api('/api/token', { code });
+        const auth = await discordSdk.commands.authenticate({ access_token });
+
+        session = await api('/api/session', {
+          access_token,
+          instance_id: discordSdk.instanceId,
+          guild_id: discordSdk.guildId,
+          channel_id: discordSdk.channelId,
+        });
+
+        const av = auth.user.avatar
+          ? `https://cdn.discordapp.com/avatars/${auth.user.id}/${auth.user.avatar}.png`
+          : `https://cdn.discordapp.com/embed/avatars/${(Number(auth.user.discriminator || 0) % 5)}.png`;
+        $('userAvatar').src = av;
+        $('userName').textContent = auth.user.global_name || auth.user.username;
+        $('userChip').hidden = false;
+
+        $('btnTela').disabled = false;
+        $('btnCamera').disabled = false;
+
+        showEmpty('Ninguém transmitindo', 'Use os botões abaixo para começar.');
+        updatePeople();
+        connectViewer();
+      } catch (e) {
+        console.error(e);
+        showEmpty('Erro ao conectar', e.message || 'Recarregue a atividade.');
+      }
+    })();
+  </script>
+</body>
+</html>
