@@ -538,6 +538,7 @@
     async function abrirShare(fonte) {
       if (!session) return;
       const url = new URL(session.shareUrl);
+      url.searchParams.set('t', session.broadcasterToken);
       url.searchParams.set('q', '2500000');
       url.searchParams.set('fps', '30');
       url.searchParams.set('fonte', fonte);
