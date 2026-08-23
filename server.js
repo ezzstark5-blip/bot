@@ -375,12 +375,30 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', rooms: rooms.size });
 });
 
+// API: Criar sala anônima (para a landing page)
+app.post('/api/room', (req, res) => {
+  const roomId = 'public-' + Date.now() + '-' + crypto.randomBytes(4).toString('hex');
+  getRoom(roomId);
+  const base = { room: roomId, uid: 'anon', name: 'Anônimo', av: '', banner: '', accentColor: null, guild: '', channel: '' };
+  res.json({
+    roomId,
+    viewerToken:      signToken({ ...base, role: 'viewer' }),
+    broadcasterToken: signToken({ ...base, role: 'broadcaster' }),
+    shareUrl: `${publicOrigin(req)}/share.html`,
+  });
+});
+
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// SPA fallback
+// SPA fallback — serve landing.html quando não há token na URL, index.html caso contrário
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const hasToken = req.query.t || req.query.frame_id;
+  if (!hasToken) {
+    res.sendFile(path.join(__dirname, 'public', 'landing.html'));
+  } else {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  }
 });
 
 // -----------------------------------------------------------------
