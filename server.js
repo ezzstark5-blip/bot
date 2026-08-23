@@ -548,6 +548,12 @@ function attachViewer(ws, room, payload) {
     if (msg.type === 'rename' && typeof msg.name === 'string') {
       v.name = msg.name.slice(0, 32);
       sendStateToViewers(room);
+    } else if (msg.type === 'need-keyframe') {
+      // Visualizador recriou o decoder (ex.: resolução mudou no meio do ar):
+      // pede um ponto de partida novo aos transmissores ativos.
+      for (const b of room.broadcasters.values()) {
+        if (b.active) safeSend(b.ws, { type: 'need-keyframe' });
+      }
     } else if (msg.type === 'start-broadcast') {
       // A atividade pediu uma fonte pela interface: repassa às abas de captura.
       for (const c of room.controls) {
