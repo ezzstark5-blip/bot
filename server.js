@@ -1,4 +1,4 @@
-﻿require('dotenv').config();
+require('dotenv').config();
 const express = require('express');
 const https = require('https');
 const crypto = require('crypto');
@@ -388,8 +388,8 @@ app.post('/api/room', (req, res) => {
   });
 });
 
-// Static files
-app.use(express.static(path.join(__dirname, 'public')));
+// Static files — desativa o index automático para que o fallback abaixo controle a rota /
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
 // Landing page — HTML inline para não depender de arquivo externo
 const LANDING_HTML = `<!DOCTYPE html>
