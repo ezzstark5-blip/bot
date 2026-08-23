@@ -133,7 +133,7 @@
       padding: 20px;
     }
     body.live .empty { display: none; }
-    .empty .icon { font-size: 3rem; filter: grayscale(.5); }
+    .empty .icon { margin-bottom: 4px; }
     .empty h1 { font-size: 1.2rem; font-weight: 600; color: #e0e0e0; }
     .muted { color: #949ba4; font-size: 0.9rem; }
     .spinner {
@@ -257,10 +257,11 @@
       background: #c62828;
     }
     .quality-opt.active .qcheck::after {
-      content: '✓';
-      color: #fff;
-      font-size: 0.7rem;
-      font-weight: 700;
+      content: '';
+      display: block;
+      width: 10px;
+      height: 10px;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") center/contain no-repeat;
     }
     .modal-actions {
       margin-top: 14px;
@@ -311,7 +312,13 @@
   <main id="grid" class="grid" hidden></main>
 
   <div id="empty" class="empty">
-    <div class="icon">🖥️</div>
+    <div class="icon">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2"/>
+        <path d="M8 21h8"/>
+        <path d="M12 17v4"/>
+      </svg>
+    </div>
     <h1 id="emptyTitle">Conectando…</h1>
     <p id="emptyText" class="muted">Autenticando com o Discord</p>
     <div class="spinner"></div>
