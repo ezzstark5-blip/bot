@@ -1,152 +1,170 @@
-﻿/**
- * Bot do Discord — status "Analisando telas"
- *
- * Conecta ao Gateway do Discord e define a presença do bot.
- * O token vem da variável de ambiente BOT_TOKEN — nunca hardcoded.
+/**
+ * Bot do Discord — status e logs com Components v2
+ * Canal de logs: 1541125991689359520
  */
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
+const LOG_CHANNEL_ID = '1541125991689359520';
 
 if (!BOT_TOKEN) {
-  console.warn('[bot] BOT_TOKEN não definido — bot de status não iniciado.');
+  console.warn('[bot] BOT_TOKEN não definido — bot não iniciado.');
+  module.exports = { logTransmissaoIniciada: () => {}, logTransmissaoEncerrada: () => {}, logSalaCriada: () => {}, logSalaFechada: () => {} };
   return;
 }
 
-const WebSocket = require('ws');
+const { Client, GatewayIntentBits, ActivityType, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SeparatorSpacingSize, MessageFlags } = require('discord.js');
 
-const GATEWAY = 'wss://gateway.discord.gg/?v=10&encoding=json';
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds],
+});
 
-let ws = null;
-let heartbeatInterval = null;
-let sequence = null;
-let reconnectDelay = 5000;
+client.once('ready', () => {
+  console.log(`[bot] Logado como ${client.user.tag}`);
 
-function connect() {
-  ws = new WebSocket(GATEWAY);
-
-  ws.on('open', () => {
-    console.log('[bot] Conectado ao Gateway do Discord.');
-    reconnectDelay = 5000;
-  });
-
-  ws.on('message', (data) => {
-    let payload;
-    try { payload = JSON.parse(data); } catch { return; }
-
-    const { op, d, s } = payload;
-    if (s) sequence = s;
-
-    switch (op) {
-      // Hello — inicia heartbeat e identifica
-      case 10:
-        startHeartbeat(d.heartbeat_interval);
-        identify();
-        break;
-
-      // Heartbeat ACK — nada a fazer
-      case 11:
-        break;
-
-      // Dispatch
-      case 0:
-        if (payload.t === 'READY') {
-          console.log(`[bot] Logado como ${d.user.username}#${d.user.discriminator}`);
-          updatePresence();
-        }
-        break;
-
-      // Reconnect
-      case 7:
-        reconnect();
-        break;
-
-      // Invalid Session
-      case 9:
-        setTimeout(identify, 2000);
-        break;
-    }
-  });
-
-  ws.on('close', (code) => {
-    console.warn(`[bot] Gateway fechado (${code}). Reconectando em ${reconnectDelay / 1000}s…`);
-    cleanup();
-    setTimeout(connect, reconnectDelay);
-    reconnectDelay = Math.min(reconnectDelay * 2, 60000);
-  });
-
-  ws.on('error', (err) => {
-    console.error('[bot] Erro no Gateway:', err.message);
-  });
-}
-
-function startHeartbeat(interval) {
-  if (heartbeatInterval) clearInterval(heartbeatInterval);
-  heartbeatInterval = setInterval(() => {
-    if (ws?.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ op: 1, d: sequence }));
-    }
-  }, interval);
-}
-
-function identify() {
-  ws.send(JSON.stringify({
-    op: 2,
-    d: {
-      token: BOT_TOKEN,
-      intents: 0,
-      properties: {
-        os: 'linux',
-        browser: 'next-transmissoes',
-        device: 'next-transmissoes',
-      },
-      presence: buildPresence(),
-    },
-  }));
-}
-
-function buildPresence() {
-  return {
+  client.user.setPresence({
     status: 'online',
-    afk: false,
-    since: null,
     activities: [
       {
         name: 'Analisando telas',
-        type: 4, // 4 = CUSTOM_STATUS
+        type: ActivityType.Custom,
         state: 'Analisando telas',
-        emoji: {
-          name: 'dowload',
-          id: '1537636547912802355',
-          animated: false,
-        },
       },
     ],
-  };
+  });
+});
+
+client.login(BOT_TOKEN).catch((err) => {
+  console.error('[bot] Falha ao logar:', err.message);
+});
+
+// -------------------------------------------------------------  helpers
+
+function horarioBR() {
+  return new Date().toLocaleString('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+  });
 }
 
-function updatePresence() {
-  if (ws?.readyState !== WebSocket.OPEN) return;
-  ws.send(JSON.stringify({
-    op: 3,
-    d: buildPresence(),
-  }));
-}
-
-function reconnect() {
-  cleanup();
-  setTimeout(connect, 1000);
-}
-
-function cleanup() {
-  if (heartbeatInterval) {
-    clearInterval(heartbeatInterval);
-    heartbeatInterval = null;
+async function enviarLog(container) {
+  try {
+    const channel = await client.channels.fetch(LOG_CHANNEL_ID);
+    if (!channel?.isTextBased()) return;
+    await channel.send({
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
+    });
+  } catch (err) {
+    console.error('[bot] Erro ao enviar log:', err.message);
   }
-  try { ws?.close(); } catch {}
-  ws = null;
 }
 
-// Inicia a conexão
-connect();
+// -------------------------------------------------------------  eventos
 
-module.exports = { updatePresence };
+/**
+ * Transmissão iniciada
+ */
+async function logTransmissaoIniciada(info) {
+  const fonteLabel = info.fonte === 'camera'
+    ? '<:controle:1537636925173923861> Câmera'
+    : '<:controle:1537636925173923861> Tela';
+
+  const container = new ContainerBuilder()
+    .setAccentColor(0x23a55a)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### <:dowload:1537636547912802355> Transmissão iniciada\n**${info.name}** começou a transmitir ${fonteLabel}`
+      )
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true)
+    )
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `-# <:pasta:1537636518519251005> Sala: \`${info.roomId}\`  •  <:baguideareiaquedaparaverotempo:1537636319445000282> ${horarioBR()}`
+      )
+    );
+
+  await enviarLog(container);
+}
+
+/**
+ * Transmissão encerrada
+ */
+async function logTransmissaoEncerrada(info) {
+  const fonteLabel = info.fonte === 'camera'
+    ? '<:controle:1537636925173923861> Câmera'
+    : '<:controle:1537636925173923861> Tela';
+
+  const container = new ContainerBuilder()
+    .setAccentColor(0xda373c)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### <:lixeira:1537635876916564010> Transmissão encerrada\n**${info.name}** parou de transmitir ${fonteLabel}`
+      )
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true)
+    )
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `-# <:pasta:1537636518519251005> Sala: \`${info.roomId}\`  •  <:baguideareiaquedaparaverotempo:1537636319445000282> ${horarioBR()}`
+      )
+    );
+
+  await enviarLog(container);
+}
+
+/**
+ * Sala criada
+ */
+async function logSalaCriada(info) {
+  const container = new ContainerBuilder()
+    .setAccentColor(0x5865f2)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### <:pasta:1537636518519251005> Sala criada\nUma nova sala foi aberta`
+      )
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true)
+    )
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `-# <:pasta:1537636518519251005> Sala: \`${info.roomId}\`  •  <:baguideareiaquedaparaverotempo:1537636319445000282> ${horarioBR()}`
+      )
+    );
+
+  await enviarLog(container);
+}
+
+/**
+ * Sala fechada
+ */
+async function logSalaFechada(info) {
+  const container = new ContainerBuilder()
+    .setAccentColor(0xf0b232)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### <:lixeira:1537635876916564010> Sala fechada\nA sala ficou vazia e foi encerrada`
+      )
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true)
+    )
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `-# <:pasta:1537636518519251005> Sala: \`${info.roomId}\`  •  <:baguideareiaquedaparaverotempo:1537636319445000282> ${horarioBR()}`
+      )
+    );
+
+  await enviarLog(container);
+}
+
+module.exports = {
+  logTransmissaoIniciada,
+  logTransmissaoEncerrada,
+  logSalaCriada,
+  logSalaFechada,
+};
