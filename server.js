@@ -8,33 +8,33 @@ const { WebSocketServer } = require('ws');
 const app = express();
 
 // -----------------------------------------------------------------
-// PORTA: no Shard Cloud, ao contrário de Render/Railway/Heroku, a
-// documentação oficial exige a porta 80 para aplicações web
+// PORTA: no Shard Cloud, ao contr�rio de Render/Railway/Heroku, a
+// documenta��o oficial exige a porta 80 para aplica��es web
 // (docs.shardcloud.app/tutorials/api/express). Para teste local,
 // defina PORT=3000 no seu .env.
 // -----------------------------------------------------------------
 const PORT = process.env.PORT || 80;
 
-// Inicia o bot de status e logs (opcional — só roda se BOT_TOKEN estiver definido)
+// Inicia o bot de status e logs (opcional � s� roda se BOT_TOKEN estiver definido)
 let bot = { logTransmissaoIniciada: () => {}, logTransmissaoEncerrada: () => {}, logSalaCriada: () => {}, logSalaFechada: () => {} };
-try { bot = require('./bot'); } catch (e) { console.warn('[bot] Não foi possível iniciar o bot:', e.message); }
+try { bot = require('./bot'); } catch (e) { console.warn('[bot] N�o foi poss�vel iniciar o bot:', e.message); }
 
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
-// Origem pública do site (onde share.html abre fora do Discord).
-// Se não definir, usa o host da própria requisição.
+// Origem p�blica do site (onde share.html abre fora do Discord).
+// Se n�o definir, usa o host da pr�pria requisi��o.
 const SHARE_ORIGIN = process.env.SHARE_ORIGIN || '';
-// Segredo para assinar os tokens (JWT HS256). Se não definir, gera um
-// aleatório por processo — tokens morrem quando o app reinicia.
+// Segredo para assinar os tokens (JWT HS256). Se n�o definir, gera um
+// aleat�rio por processo � tokens morrem quando o app reinicia.
 const TOKEN_SECRET =
   process.env.TOKEN_SECRET || crypto.randomBytes(32).toString('hex');
 
 if (!CLIENT_ID || !CLIENT_SECRET) {
-  console.warn('[aviso] CLIENT_ID ou CLIENT_SECRET não definidos no .env — a troca de token OAuth vai falhar.');
+  console.warn('[aviso] CLIENT_ID ou CLIENT_SECRET n�o definidos no .env � a troca de token OAuth vai falhar.');
 }
 
 // -----------------------------------------------------------------
-// Webhook de logs — envia eventos para um canal do Discord.
+// Webhook de logs � envia eventos para um canal do Discord.
 // Defina LOG_WEBHOOK no .env para ativar.
 // -----------------------------------------------------------------
 const LOG_WEBHOOK = process.env.LOG_WEBHOOK || '';
@@ -67,12 +67,12 @@ function horario() {
   return new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 }
 if (!process.env.TOKEN_SECRET) {
-  console.warn('[aviso] TOKEN_SECRET não definido no .env — usando segredo temporário desta execução.');
+  console.warn('[aviso] TOKEN_SECRET n�o definido no .env � usando segredo tempor�rio desta execu��o.');
 }
 
 app.use(express.json({ limit: '256kb' }));
 
-// CORS + headers obrigatórios para Discord Activity
+// CORS + headers obrigat�rios para Discord Activity
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Content-Type');
@@ -86,7 +86,7 @@ app.use((req, res, next) => {
     "frame-ancestors 'self' https://discord.com https://canary.discord.com https://ptb.discord.com https://*.discordsays.com",
   );
 
-  // Remove qualquer X-Frame-Options que o Express ou o host possam adicionar —
+  // Remove qualquer X-Frame-Options que o Express ou o host possam adicionar �
   // ele conflita com o frame-ancestors acima e bloqueia o iframe do Discord.
   res.removeHeader('X-Frame-Options');
 
@@ -95,10 +95,10 @@ app.use((req, res, next) => {
 });
 
 // -----------------------------------------------------------------
-// Tokens: <payloadBase64url>.<assinaturaHMAC-SHA256> — mesmo formato
-// da referência, cujo share.js lê o payload no primeiro segmento.
+// Tokens: <payloadBase64url>.<assinaturaHMAC-SHA256> � mesmo formato
+// da refer�ncia, cujo share.js l� o payload no primeiro segmento.
 // Payload com {room, uid, name, av, guild, channel, role[, exp]}.
-// A verificação aceita também o formato JWT padrão (header.payload.sig).
+// A verifica��o aceita tamb�m o formato JWT padr�o (header.payload.sig).
 // -----------------------------------------------------------------
 
 function b64url(buf) {
@@ -140,7 +140,7 @@ function verifyToken(token) {
 
 // -----------------------------------------------------------------
 // Salas: uma por guild:channel. Guarda transmissores (slots),
-// visualizadores e conexões de controle da página de captura.
+// visualizadores e conex�es de controle da p�gina de captura.
 // -----------------------------------------------------------------
 
 const rooms = new Map(); // roomId -> room
@@ -203,7 +203,10 @@ function participants(room) {
   return [...seen.entries()].map(([id, info]) => ({ id, ...info }));
 }
 
-function sendStateToViewers(room) {
+
+// Manda state completo para TODOS � viewers e broadcasters.
+// Broadcasters tamb�m precisam saber quem entrou/saiu da sala.
+function sendStateToAll(room) {
   const state = {
     type: 'state',
     participants: participants(room),
@@ -211,10 +214,11 @@ function sendStateToViewers(room) {
     room: null,
     streams: activeStreams(room),
   };
-  for (const v of room.viewers) safeSend(v.ws, state);
+  for (const v of room.viewers)              safeSend(v.ws, state);
+  for (const b of room.broadcasters.values()) safeSend(b.ws, state);
 }
 
-// Envia contagem de viewers apenas para os broadcasters (não altera participantes)
+// Envia contagem de viewers apenas para os broadcasters (n�o altera participantes)
 function sendViewersCount(room) {
   const msg = { type: 'viewers-count', viewers: room.viewers.size };
   for (const b of room.broadcasters.values()) safeSend(b.ws, msg);
@@ -235,7 +239,7 @@ function forwardConfig(room, b, kind) {
   for (const v of room.viewers) safeSend(v.ws, msg);
 }
 
-const WS_OPEN = 1; // ws.ReadyState.Open — evita depender do global WebSocket
+const WS_OPEN = 1; // ws.ReadyState.Open � evita depender do global WebSocket
 
 function safeSend(ws, obj) {
   try {
@@ -263,7 +267,7 @@ function discordApi(pathName, token) {
           try {
             resolve(JSON.parse(data));
           } catch {
-            reject(new Error('Resposta inválida do Discord'));
+            reject(new Error('Resposta inv�lida do Discord'));
           }
         });
       },
@@ -325,8 +329,8 @@ app.post('/api/token', (req, res) => {
   request.end();
 });
 
-// API: Sessão — valida o access_token no Discord e devolve os tokens
-// (visualizador + transmissor) e a URL da página de captura.
+// API: Sess�o � valida o access_token no Discord e devolve os tokens
+// (visualizador + transmissor) e a URL da p�gina de captura.
 app.post('/api/session', async (req, res) => {
   const { access_token, guild_id, channel_id } = req.body || {};
   if (!access_token) return res.status(400).json({ error: 'access_token required' });
@@ -337,14 +341,14 @@ app.post('/api/session', async (req, res) => {
   } catch (e) {
     return res.status(502).json({ error: 'Falha ao validar token no Discord: ' + e.message });
   }
-  if (!user || !user.id) return res.status(401).json({ error: 'Token inválido' });
+  if (!user || !user.id) return res.status(401).json({ error: 'Token inv�lido' });
 
   const name    = user.global_name || user.username || 'Convidado';
   const guild   = guild_id   ? String(guild_id)   : null;
   const channel = channel_id ? String(channel_id) : null;
   const roomId  = guild && channel ? `call-${guild}-${channel}` : `user-${user.id}`;
 
-  // banner é hash do banner; accent_color é inteiro RGB
+  // banner � hash do banner; accent_color � inteiro RGB
   const banner       = user.banner       || '';
   const accentColor  = user.accent_color != null ? user.accent_color : null;
 
@@ -355,7 +359,7 @@ app.post('/api/session', async (req, res) => {
     guild: guild || '', channel: channel || '',
   };
 
-  getRoom(roomId); // garante que a sala exista desde já
+  getRoom(roomId); // garante que a sala exista desde j�
 
   res.json({
     roomId,
@@ -382,13 +386,13 @@ app.get('*', (req, res) => {
 // -----------------------------------------------------------------
 // Relay WebSocket: /ws?t=<token>[&fonte=tela|camera][&modo=controle]
 //
-// Papéis:
-//  - fonte=...     → transmissor (recebe um slot, repacota nada: só repassa)
-//  - modo=controle → canal de controle da aba de captura
-//  - resto         → visualizador
+// Pap�is:
+//  - fonte=...     ? transmissor (recebe um slot, repacota nada: s� repassa)
+//  - modo=controle ? canal de controle da aba de captura
+//  - resto         ? visualizador
 //
-// Formato binário (vídeo e áudio), definido pelo broadcaster.js:
-//   [1B slot][1B tipo][8B timestamp f64][8B relógio envio f64][payload]
+// Formato bin�rio (v�deo e �udio), definido pelo broadcaster.js:
+//   [1B slot][1B tipo][8B timestamp f64][8B rel�gio envio f64][payload]
 // -----------------------------------------------------------------
 
 const server = app.listen(PORT, '0.0.0.0', () => {
@@ -397,9 +401,9 @@ const server = app.listen(PORT, '0.0.0.0', () => {
 
 server.on('error', (err) => {
   if (err.code === 'EACCES') {
-    console.error(`Sem permissão para abrir a porta ${PORT}. No Shard Cloud use a porta 80 (padrão). Testando local? Defina PORT=3000 no .env.`);
+    console.error(`Sem permiss�o para abrir a porta ${PORT}. No Shard Cloud use a porta 80 (padr�o). Testando local? Defina PORT=3000 no .env.`);
   } else if (err.code === 'EADDRINUSE') {
-    console.error(`A porta ${PORT} já está em uso por outro processo.`);
+    console.error(`A porta ${PORT} j� est� em uso por outro processo.`);
   } else {
     console.error('Erro ao iniciar o servidor:', err);
   }
@@ -416,8 +420,8 @@ server.on('upgrade', (request, socket, head) => {
     socket.destroy();
     return;
   }
-  // Remove o prefixo /.proxy do INÍCIO do path (Discord proxy encaminha como /.proxy/ws,
-  // não /ws/.proxy). O regex anterior removia do final e nunca casava dentro do Discord.
+  // Remove o prefixo /.proxy do IN�CIO do path (Discord proxy encaminha como /.proxy/ws,
+  // n�o /ws/.proxy). O regex anterior removia do final e nunca casava dentro do Discord.
   if (url.pathname.replace(/^\/.proxy/, '').replace(/\/+$/, '') !== '/ws') {
     socket.destroy();
     return;
@@ -435,7 +439,7 @@ wss.on('connection', (ws, request, params) => {
 
   const payload = verifyToken(params.get('t'));
   if (!payload || !payload.room) {
-    ws.send(JSON.stringify({ type: 'error', message: 'Token inválido.' }));
+    ws.send(JSON.stringify({ type: 'error', message: 'Token inv�lido.' }));
     ws.close(4001, 'token invalido');
     return;
   }
@@ -453,15 +457,15 @@ wss.on('connection', (ws, request, params) => {
 
 function attachBroadcaster(ws, room, payload, fonte) {
   if (payload.role !== 'broadcaster') {
-    ws.send(JSON.stringify({ type: 'error', message: 'Token sem permissão de transmissão.' }));
+    ws.send(JSON.stringify({ type: 'error', message: 'Token sem permiss�o de transmiss�o.' }));
     ws.close(4003, 'sem permissao');
     return;
   }
 
-  // Uma transmissão por usuário/fonte: segunda conexão é recusada.
+  // Uma transmiss�o por usu�rio/fonte: segunda conex�o � recusada.
   for (const b of room.broadcasters.values()) {
     if (b.userId === payload.uid && b.fonte === fonte) {
-      ws.send(JSON.stringify({ type: 'error', message: 'Você já está transmitindo desta fonte nesta sala.' }));
+      ws.send(JSON.stringify({ type: 'error', message: 'Voc� j� est� transmitindo desta fonte nesta sala.' }));
       ws.close(4002, 'ja transmitindo');
       return;
     }
@@ -508,20 +512,20 @@ function attachBroadcaster(ws, room, payload, fonte) {
     switch (msg.type) {
       case 'start':
         b.active = true;
-        logar(`**${b.name}** começou a transmitir **${b.fonte}** na sala \`${room.id}\` (${horario()})`);
+        logar(`**${b.name}** come�ou a transmitir **${b.fonte}** na sala \`${room.id}\` (${horario()})`);
         bot.logTransmissaoIniciada({ name: b.name, userId: b.userId, av: b.av, fonte: b.fonte, roomId: room.id });
         broadcastStreamStart(room, b);
-        sendStateToViewers(room);
+        sendStateToAll(room);
         break;
       case 'config':
         b.config = msg.config;
         forwardConfig(room, b, 'config');
-        sendStateToViewers(room);
+        sendStateToAll(room);
         break;
       case 'audio-config':
         b.audioConfig = msg.config;
         forwardConfig(room, b, 'audio-config');
-        sendStateToViewers(room);
+        sendStateToAll(room);
         break;
       case 'stop':
         if (b.active) {
@@ -529,15 +533,15 @@ function attachBroadcaster(ws, room, payload, fonte) {
           logar(`**${b.name}** parou de transmitir (${horario()})`);
           bot.logTransmissaoEncerrada({ name: b.name, userId: b.userId, av: b.av, fonte: b.fonte, roomId: room.id });
           broadcastStreamStop(room, b.slot);
-          sendStateToViewers(room);
+          sendStateToAll(room);
         }
         break;
       case 'native-audio-start':
-        // Captura nativa do Firefox depende de um agente na máquina do
-        // usuário; este servidor não oferece isso.
+        // Captura nativa do Firefox depende de um agente na m�quina do
+        // usu�rio; este servidor n�o oferece isso.
         safeSend(ws, {
           type: 'native-audio-error',
-          message: 'Áudio nativo do Firefox não está disponível neste servidor.',
+          message: '�udio nativo do Firefox n�o est� dispon�vel neste servidor.',
         });
         break;
       case 'native-audio-stop':
@@ -554,7 +558,7 @@ function attachBroadcaster(ws, room, payload, fonte) {
       bot.logTransmissaoEncerrada({ name: b.name, userId: b.userId, av: b.av, fonte: b.fonte, roomId: room.id });
       broadcastStreamStop(room, b.slot);
     }
-    sendStateToViewers(room);
+    sendStateToAll(room);
     sendViewersCount(room);
     maybeCloseRoom(room);
   });
@@ -566,7 +570,7 @@ function attachControl(ws, room) {
   room.controls.add(ws);
 
   ws.on('message', (data) => {
-    // Controle só escuta; nada chega dele na referência.
+    // Controle s� escuta; nada chega dele na refer�ncia.
   });
 
   ws.on('close', () => {
@@ -607,15 +611,15 @@ function attachViewer(ws, room, payload) {
 
     if (msg.type === 'rename' && typeof msg.name === 'string') {
       v.name = msg.name.slice(0, 32);
-      sendStateToViewers(room);
+      sendStateToAll(room);
     } else if (msg.type === 'need-keyframe') {
-      // Visualizador recriou o decoder (ex.: resolução mudou no meio do ar):
+      // Visualizador recriou o decoder (ex.: resolu��o mudou no meio do ar):
       // pede um ponto de partida novo aos transmissores ativos.
       for (const b of room.broadcasters.values()) {
         if (b.active) safeSend(b.ws, { type: 'need-keyframe' });
       }
     } else if (msg.type === 'start-broadcast') {
-      // A atividade pediu uma fonte pela interface: repassa às abas de captura.
+      // A atividade pediu uma fonte pela interface: repassa �s abas de captura.
       for (const c of room.controls) {
         safeSend(c, { type: 'start-request', fonte: msg.fonte, opcoes: msg.opcoes });
       }
@@ -630,7 +634,7 @@ function attachViewer(ws, room, payload) {
     room.viewers.delete(v);
     logar(`**${v.name}** saiu da sala (${room.viewers.size} restantes)`);
     sendViewersCount(room);
-    sendStateToViewers(room);
+    sendStateToAll(room);
     maybeCloseRoom(room);
   });
 }
@@ -648,3 +652,4 @@ setInterval(() => {
     } catch {}
   }
 }, 30000);
+
