@@ -233,6 +233,16 @@
       return out;
     }
 
+    // Pede keyframe ao transmissor via relay: usado quando o decoder é
+    // recriado no meio do ar, para não esperar o ciclo periódico de 3s.
+    function pedirKeyframe() {
+      try {
+        if (ws && ws.readyState === 1) {
+          ws.send(JSON.stringify({ type: 'need-keyframe' }));
+        }
+      } catch {}
+    }
+
     /**
      * Um stream da sala: recebe os pacotes binários do relay
      * ([slot][tipo][ts f64][clock f64][payload]) e desenha vídeo (canvas,
@@ -268,8 +278,27 @@
       }
 
       setVideoConfig(config) {
+        const mudou =
+          !this.config ||
+          this.config.width !== config.width ||
+          this.config.height !== config.height ||
+          this.config.codec !== config.codec;
         this.config = config;
-        this.flushPending();
+        if (!mudou) {
+          this.flushPending();
+          return;
+        }
+        // O encoder reconfigurou (resolução nova): o decoder antigo não serve
+        // mais — decodificar com o tamanho errado é o que corta a imagem.
+        // Recria e pede keyframe para recomeçar do ponto certo.
+        if (this.decoder) {
+          try { this.decoder.close(); } catch {}
+          this.decoder = null;
+          this.waitingKey = true;
+          this.pending.length = 0;
+          pedirKeyframe();
+        }
+        this.ensureDecoder();
       }
 
       setAudioConfig(config) {
