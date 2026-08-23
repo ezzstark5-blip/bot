@@ -400,12 +400,290 @@ const LANDING_HTML = `<!DOCTYPE html>
   <title>Next Cup · Transmissões</title>
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    html,body{height:100%;overflow:hidden}
-    body{
-      font-family:'Segoe UI',system-ui,sans-serif;
-      background:#0d0d0f;color:#f2f3f5;
-      min-height:100vh;position:relative;
+    html,body{min-height:100%;scroll-behavior:smooth;}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:#0d0d0f;color:#f2f3f5;}
+
+    /* ── Fundo ── */
+    .bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:linear-gradient(to right,rgba(8,9,12,.96) 35%,rgba(8,9,12,.6) 65%,rgba(8,9,12,.15) 100%),
+      url('/foto/Next_-_Banner.png') center/cover no-repeat;}
+    .bg-fade{position:fixed;bottom:0;left:0;right:0;height:260px;z-index:0;pointer-events:none;
+      background:linear-gradient(0deg,#0d0d0f 0%,transparent 100%);}
+
+    /* ── Topbar ── */
+    .topbar{position:fixed;top:0;left:0;right:0;z-index:20;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:14px 40px;
+      background:linear-gradient(180deg,rgba(8,9,12,.7) 0%,transparent 100%);
+      backdrop-filter:blur(0px);}
+    .topbar-left{display:flex;align-items:center;gap:10px;}
+    .topbar-logo{width:30px;height:30px;border-radius:7px;object-fit:contain;}
+    .topbar-name{font-size:.82rem;font-weight:800;color:#fff;letter-spacing:.04em;text-transform:uppercase;}
+    .topbar-sep{width:1px;height:14px;background:rgba(255,255,255,.15);}
+    .topbar-sub{font-size:.75rem;color:rgba(255,255,255,.35);}
+    .btn-discord{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;
+      background:#5865f2;border:none;border-radius:999px;color:#fff;font-size:.8rem;
+      font-weight:600;cursor:pointer;box-shadow:0 2px 14px rgba(88,101,242,.4);
+      transition:transform .15s,box-shadow .15s;}
+    .btn-discord:hover{transform:scale(1.04);box-shadow:0 4px 22px rgba(88,101,242,.6);}
+    .btn-discord svg{width:17px;height:17px;fill:#fff;flex-shrink:0;}
+    .user-pill{display:none;align-items:center;gap:8px;
+      background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+      border-radius:999px;padding:4px 14px 4px 4px;}
+    .user-pill.visible{display:flex;}
+    .user-pill img{width:26px;height:26px;border-radius:50%;object-fit:cover;}
+    .user-pill span{font-size:.8rem;font-weight:600;color:#f2f3f5;}
+
+    /* ── Hero ── */
+    .hero{position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;
+      padding:100px 40px 60px 10%;}
+    .hero-content{display:flex;flex-direction:column;gap:22px;max-width:520px;}
+    .eyebrow{display:inline-flex;align-items:center;gap:8px;
+      font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+      color:rgba(255,255,255,.4);}
+    .eyebrow-dot{width:5px;height:5px;border-radius:50%;background:#c62828;}
+    h1{font-size:clamp(2.2rem,5vw,3.4rem);font-weight:900;line-height:1.08;
+      letter-spacing:-.5px;color:#fff;}
+    .desc{font-size:.93rem;color:rgba(255,255,255,.5);line-height:1.65;max-width:400px;}
+
+    /* Features */
+    .features{display:flex;flex-direction:column;gap:9px;}
+    .feature{display:flex;align-items:center;gap:12px;font-size:.83rem;color:rgba(255,255,255,.45);}
+    .feature-icon{width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.05);
+      border:1px solid rgba(198,40,40,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .feature-icon svg{width:13px;height:13px;fill:none;stroke:#c62828;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+    /* Stats */
+    .stats{display:flex;gap:28px;padding-top:4px;}
+    .stat{display:flex;flex-direction:column;gap:2px;}
+    .stat-val{font-size:1.35rem;font-weight:800;color:#fff;}
+    .stat-label{font-size:.7rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;}
+    .stat-sep{width:1px;background:rgba(255,255,255,.08);align-self:stretch;}
+
+    /* Botão criar */
+    .btn-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+    .btn-criar{display:inline-flex;align-items:center;gap:9px;padding:13px 28px;
+      background:#c62828;border:none;border-radius:10px;color:#fff;font-size:.93rem;
+      font-weight:700;cursor:pointer;box-shadow:0 4px 24px rgba(198,40,40,.4);
+      transition:transform .15s,box-shadow .15s;}
+    .btn-criar:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(198,40,40,.55);}
+    .btn-criar:active{transform:translateY(0);}
+    .btn-criar:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+    .btn-criar svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+    .btn-hint{font-size:.75rem;color:rgba(255,255,255,.3);}
+
+    /* URL box */
+    .url-box{display:none;flex-direction:column;gap:8px;width:100%;max-width:460px;}
+    .url-box.on{display:flex;}
+    .url-label{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.28);}
+    .url-row{display:flex;align-items:center;gap:8px;
+      background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 14px;}
+    .url-input{flex:1;font-size:.8rem;color:#b5bac1;background:none;border:none;outline:none;
+      font-family:inherit;cursor:default;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .btn-copy{flex-shrink:0;background:#c62828;border:none;border-radius:7px;padding:6px 14px;
+      color:#fff;font-size:.76rem;font-weight:600;cursor:pointer;transition:background .15s;}
+    .btn-copy:hover{background:#d32f2f;}
+    .btn-copy.ok{background:#2e7d32;}
+    .url-hint-text{font-size:.72rem;color:rgba(255,255,255,.25);line-height:1.4;}
+
+    /* ── Seção Como funciona ── */
+    .section{position:relative;z-index:1;padding:80px 40px 80px 10%;
+      background:linear-gradient(180deg,transparent 0%,rgba(10,10,14,.98) 20%);}
+    .section-title{font-size:.68rem;font-weight:700;letter-spacing:.12em;
+      text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:36px;}
+    .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;max-width:800px;}
+    .step{display:flex;flex-direction:column;gap:12px;padding:22px;
+      background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;}
+    .step-num{font-size:.7rem;font-weight:800;color:#c62828;letter-spacing:.08em;}
+    .step-title{font-size:.9rem;font-weight:700;color:#fff;}
+    .step-desc{font-size:.78rem;color:rgba(255,255,255,.38);line-height:1.55;}
+
+    /* ── Seção Discord ── */
+    .discord-section{position:relative;z-index:1;
+      padding:0 40px 80px 10%;}
+    .discord-card{display:flex;align-items:center;gap:20px;max-width:560px;
+      background:rgba(88,101,242,.1);border:1px solid rgba(88,101,242,.25);
+      border-radius:14px;padding:22px 26px;}
+    .discord-card svg{width:36px;height:36px;fill:#5865f2;flex-shrink:0;}
+    .discord-card-text h3{font-size:.9rem;font-weight:700;color:#fff;margin-bottom:4px;}
+    .discord-card-text p{font-size:.76rem;color:rgba(255,255,255,.38);line-height:1.5;}
+
+    /* Footer */
+    .footer{position:relative;z-index:1;padding:20px 40px 28px 10%;
+      font-size:.7rem;color:rgba(255,255,255,.18);border-top:1px solid rgba(255,255,255,.06);}
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="bg-fade"></div>
+
+  <!-- Topbar -->
+  <nav class="topbar">
+    <div class="topbar-left">
+      <img class="topbar-logo" src="/foto/1321a2929b5943c3cc2be6e3722c2552.png" alt="NEXT">
+      <span class="topbar-name">Next Cup</span>
+      <div class="topbar-sep"></div>
+      <span class="topbar-sub">transmissões</span>
+    </div>
+    <button class="btn-discord" id="btnLogin">
+      <svg viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
+      </svg>
+      Conectar Discord
+    </button>
+    <div class="user-pill" id="userPill">
+      <img id="userAvatar" src="" alt="">
+      <span id="userName"></span>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="eyebrow"><span class="eyebrow-dot"></span>Next Cup · Ao vivo</div>
+      <h1>Sua tela, ao vivo,<br>direto para a sala.</h1>
+      <p class="desc">Crie uma sala em um clique, compartilhe o link e transmita pelo navegador. Sem instalar nada, sem cadastro.</p>
+
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+          Sala instantânea, entra por link
+        </div>
+        <div class="feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></div>
+          Compartilhe tela ou câmera
+        </div>
+        <div class="feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          Várias pessoas transmitindo ao mesmo tempo
+        </div>
+        <div class="feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          Sem passar pelo servidor — baixa latência
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><span class="stat-val">0ms</span><span class="stat-label">Setup</span></div>
+        <div class="stat-sep"></div>
+        <div class="stat"><span class="stat-val">120fps</span><span class="stat-label">Máx FPS</span></div>
+        <div class="stat-sep"></div>
+        <div class="stat"><span class="stat-val">∞</span><span class="stat-label">Salas</span></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-criar" id="btnCriar">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          Criar sala
+        </button>
+        <span class="btn-hint">Grátis · Sem cadastro</span>
+      </div>
+
+      <div class="url-box" id="urlBox">
+        <span class="url-label">Link da sala</span>
+        <div class="url-row">
+          <input class="url-input" id="urlInput" readonly>
+          <button class="btn-copy" id="btnCopy">Copiar</button>
+        </div>
+        <p class="url-hint-text">Envie para quem vai transmitir ou assistir. Expira quando a sala fechar.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Como funciona -->
+  <section class="section">
+    <div class="section-title">Como funciona</div>
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">01</span>
+        <div class="step-title">Crie a sala</div>
+        <p class="step-desc">Clique em "Criar sala" e receba um link único. Nenhuma conta necessária.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <div class="step-title">Compartilhe</div>
+        <p class="step-desc">Envie o link para quem vai transmitir. Ele abre a aba de captura direto no navegador.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <div class="step-title">Assista ao vivo</div>
+        <p class="step-desc">Quem acessar o link vê a transmissão em tempo real, com áudio e vídeo.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Discord -->
+  <section class="discord-section">
+    <div class="discord-card">
+      <svg viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
+      </svg>
+      <div class="discord-card-text">
+        <h3>Integrado ao Discord</h3>
+        <p>Use dentro do Discord como Activity ou acesse direto pelo navegador. A transmissão aparece para todos na sala.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">Next Cup · Transmissões ao vivo · nextcuptransmissoes.online</footer>
+
+  <script>
+    const CLIENT_ID = '1540951591685853305';
+    const REDIRECT  = location.origin + location.pathname;
+
+    const btnLogin = document.getElementById('btnLogin');
+    const userPill = document.getElementById('userPill');
+    const userAv   = document.getElementById('userAvatar');
+    const userNm   = document.getElementById('userName');
+
+    function applyUser(u) {
+      const av = u.avatar
+        ? 'https://cdn.discordapp.com/avatars/'+u.id+'/'+u.avatar+'.png?size=64'
+        : 'https://cdn.discordapp.com/embed/avatars/'+((Number(u.discriminator||0))%5)+'.png';
+      userAv.src = av; userNm.textContent = u.global_name || u.username;
+      btnLogin.style.display = 'none'; userPill.classList.add('visible');
     }
+    const hash = new URLSearchParams(location.hash.slice(1));
+    const tok  = hash.get('access_token');
+    if (tok) {
+      history.replaceState(null,'',location.pathname+location.search);
+      fetch('https://discord.com/api/users/@me',{headers:{Authorization:'Bearer '+tok}})
+        .then(r=>r.json()).then(applyUser).catch(()=>{});
+    }
+    btnLogin.addEventListener('click',()=>{
+      location.href='https://discord.com/oauth2/authorize?client_id='+CLIENT_ID
+        +'&redirect_uri='+encodeURIComponent(REDIRECT)+'&response_type=token&scope=identify';
+    });
+
+    const btnCriar = document.getElementById('btnCriar');
+    const urlBox   = document.getElementById('urlBox');
+    const urlInput = document.getElementById('urlInput');
+    const btnCopy  = document.getElementById('btnCopy');
+
+    btnCriar.addEventListener('click', async () => {
+      btnCriar.disabled=true; btnCriar.innerHTML='Criando…';
+      try {
+        const r = await fetch('/api/room',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error||'Erro');
+        const u = new URL(location.origin);
+        u.searchParams.set('room',d.roomId); u.searchParams.set('t',d.viewerToken);
+        urlInput.value = u.toString();
+        urlBox.classList.add('on');
+        btnCriar.innerHTML='<svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 5v14"/><path d="M5 12h14"/></svg> Criar outra sala';
+        btnCriar.disabled=false;
+        urlBox.scrollIntoView({behavior:'smooth',block:'nearest'});
+      } catch(e) { btnCriar.innerHTML='Erro — tente novamente'; btnCriar.disabled=false; }
+    });
+    btnCopy.addEventListener('click',()=>{
+      navigator.clipboard.writeText(urlInput.value).then(()=>{
+        btnCopy.textContent='Copiado!'; btnCopy.classList.add('ok');
+        setTimeout(()=>{btnCopy.textContent='Copiar';btnCopy.classList.remove('ok');},2000);
+      });
+    });
+  </script>
+</body>
+</html>`;
 
     /* ── Fundo banner ── */
     .bg{
