@@ -10,7 +10,7 @@
     html, body { height: 100%; overflow: hidden; }
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #0a0a0a;
+      background: #1a1b1e;
       color: #fff;
       display: flex;
       flex-direction: column;
@@ -18,33 +18,24 @@
 
     /* ========== TOPBAR ========== */
     .topbar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 10px;
-      flex-shrink: 0;
-      background: #0f0f0f;
-      border-bottom: 1px solid #1a1a1a;
-      z-index: 20;
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 10px; flex-shrink: 0;
+      background: #111214; border-bottom: 1px solid #1e1f22; z-index: 20;
     }
     .logo { width: 26px; height: 26px; border-radius: 5px; object-fit: contain; }
     .pill {
-      background: #1a1a1a;
-      border: 1px solid #2a1010;
-      border-radius: 999px;
-      padding: 4px 12px;
-      font-size: 0.78rem;
-      color: #b5bac1;
+      background: #2b2d31; border-radius: 999px;
+      padding: 4px 12px; font-size: 0.78rem; color: #b5bac1;
     }
     .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
     .user-chip {
       display: flex; align-items: center; gap: 6px;
-      background: #1a1a1a; border: 1px solid #2a1010;
-      border-radius: 999px; padding: 3px 10px 3px 3px; font-size: 0.78rem;
+      background: #2b2d31; border-radius: 999px;
+      padding: 3px 10px 3px 3px; font-size: 0.78rem;
     }
     .user-chip img { width: 22px; height: 22px; border-radius: 50%; }
     .icon-btn {
-      background: none; border: 1px solid #2a1010; border-radius: 7px;
+      background: none; border: 1px solid #3a3c41; border-radius: 7px;
       padding: 5px; cursor: pointer; color: #b5bac1;
       display: flex; align-items: center; justify-content: center; transition: all .15s;
     }
@@ -55,195 +46,269 @@
     /* ========== STAGE ========== */
     .stage { flex: 1; display: flex; min-height: 0; overflow: hidden; }
 
-    /* ---- Área central ---- */
+    /* ========== ÁREA CENTRAL ========== */
     .main-area {
-      flex: 1; min-width: 0;
-      position: relative;
-      background: #000;
+      flex: 1; min-width: 0; position: relative;
+      background: #111214;
       display: flex; align-items: center; justify-content: center;
     }
 
-    /* Estado vazio */
-    .empty {
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; text-align: center; gap: 8px;
-      padding: 20px; width: 100%; height: 100%;
+    /* ---- Estado idle: grid de avatares ---- */
+    .idle-view {
+      width: 100%; height: 100%;
+      position: relative;
     }
-    .empty h1 { font-size: 1.1rem; font-weight: 600; color: #e0e0e0; }
-    .muted-text { color: #949ba4; font-size: 0.85rem; }
+    .participants-grid {
+      width: 100%; height: 100%;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      grid-auto-rows: 1fr;
+      gap: 4px; padding: 4px;
+      align-content: start;
+    }
+    .participant-tile {
+      position: relative; background: #1e1f22;
+      border-radius: 8px; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 140px;
+    }
+    .participant-avatar {
+      width: 80px; height: 80px; border-radius: 50%;
+      object-fit: cover; border: 2px solid #2b2d31;
+    }
+    .participant-avatar-ph {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: #36393f; border: 2px solid #2b2d31;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; font-weight: 700; color: #b5bac1;
+    }
+    .participant-name {
+      position: absolute; bottom: 8px; left: 8px;
+      background: rgba(0,0,0,.7); border-radius: 4px;
+      padding: 2px 8px; font-size: 0.76rem; font-weight: 500;
+      max-width: calc(100% - 16px);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Spinner */
+    .connect-msg {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 10px;
+      color: #b5bac1; font-size: 0.9rem;
+    }
     .spinner {
-      width: 20px; height: 20px;
-      border: 2px solid #2a1010; border-top-color: #c62828;
+      width: 22px; height: 22px;
+      border: 2px solid #3a3c41; border-top-color: #c62828;
       border-radius: 50%; animation: spin .8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Tile principal */
+    /* ---- Dock flutuante (hover na área) ---- */
+    /*
+     * Dock base — dois grupos de botões separados por um gap,
+     * exatamente como na imagem:
+     *   [tela] [câm] [cfg]    [share] [fullscreen]
+     * Cada grupo tem fundo próprio arredondado.
+     * O dock inteiro fica invisível até hover.
+     */
+    .live-dock {
+      position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 8px; align-items: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity .18s;
+      z-index: 10;
+    }
+    .main-area:hover .live-dock { opacity: 1; pointer-events: auto; }
+    /* Grupo de botões */
+    .dock-group {
+      display: flex; gap: 2px; align-items: center;
+      background: rgba(30,31,34,.92);
+      border-radius: 999px;
+      padding: 5px 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.5);
+    }
+    .dock-btn {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,.08);
+      border: none; border-radius: 50%;
+      color: #fff; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+      flex-shrink: 0;
+    }
+    .dock-btn:hover { background: rgba(255,255,255,.2); }
+    .dock-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .dock-btn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    /* Botão ativo (tela ou câmera em uso) fica vermelho */
+    .dock-btn.active-stream { background: #ed4245; }
+    .dock-btn.active-stream:hover { background: #c03537; }
+
+    /* ========== TILE PRINCIPAL (stream ativa) ========== */
     .main-tile {
       position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
       background: #000;
     }
     .main-tile canvas {
+      position: absolute; inset: 0;
       width: 100%; height: 100%;
       object-fit: contain; display: block;
     }
-    /* Label inferior esquerdo */
-    .stream-label {
-      position: absolute; left: 10px; bottom: 10px;
-      background: rgba(10,10,10,.85); border: 1px solid #2a1010;
-      border-radius: 6px; padding: 3px 8px;
-      font-size: 0.75rem; display: flex; gap: 6px; align-items: center;
-      pointer-events: none;
+    /* Label inferior esquerdo dentro do tile */
+    .stream-bottom-bar {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      display: flex; align-items: center; gap: 10px;
+      padding: 6px 10px;
+      background: linear-gradient(0deg, rgba(0,0,0,.7) 0%, transparent 100%);
+      pointer-events: none; z-index: 5;
+    }
+    .stream-name-pill {
+      background: rgba(0,0,0,.75); border-radius: 4px;
+      padding: 2px 8px; font-size: 0.74rem; font-weight: 500;
+      display: flex; gap: 5px; align-items: center;
     }
     .live-dot {
       width: 7px; height: 7px; border-radius: 50%;
-      background: #f44336; display: inline-block;
-      animation: pulse 1.5s infinite; box-shadow: 0 0 5px #f44336;
+      background: #f44336; animation: pulse 1.5s infinite;
+      box-shadow: 0 0 5px #f44336; flex-shrink: 0;
     }
-    @keyframes pulse { 50% { opacity: .35; box-shadow: 0 0 2px #f44336; } }
+    @keyframes pulse { 50% { opacity: .3; box-shadow: 0 0 2px #f44336; } }
     .badge {
       background: #b71c1c; border-radius: 3px;
-      padding: 1px 5px; font-size: 0.65rem;
-      text-transform: uppercase; font-weight: 600;
+      padding: 1px 5px; font-size: 0.62rem;
+      text-transform: uppercase; font-weight: 700;
+    }
+    .viewer-count-bar {
+      display: flex; align-items: center; gap: 4px;
+      background: rgba(0,0,0,.75); border-radius: 4px;
+      padding: 2px 8px; font-size: 0.74rem; color: #b5bac1;
+    }
+    .viewer-count-bar svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* Label "você" canto superior direito */
+    .you-label {
+      position: absolute; top: 8px; right: 8px;
+      background: rgba(0,0,0,.72); border-radius: 4px;
+      padding: 2px 8px; font-size: 0.72rem; color: #b5bac1;
+      z-index: 5; pointer-events: none;
     }
 
-    /* Botão X do tile principal — visível sempre */
-    .close-main {
-      position: absolute; top: 10px; right: 10px;
-      width: 28px; height: 28px;
-      background: rgba(0,0,0,.72); border: 1px solid #555;
-      border-radius: 6px; color: #fff; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px; font-weight: 700;
-      transition: all .15s; z-index: 10;
-    }
-    .close-main:hover { background: #c62828; border-color: #c62828; }
-
-    /* Dock de transmissão */
-    .dock { display: flex; gap: 10px; margin-top: 16px; }
-    .btn {
-      display: flex; flex-direction: column; align-items: center; gap: 5px;
-      padding: 10px 18px; background: #b71c1c; border: 1px solid #c62828;
-      border-radius: 10px; color: #fff; font-size: 0.82rem; font-weight: 500;
-      cursor: pointer; transition: all .15s;
-    }
-    .btn:hover { background: #c62828; border-color: #d32f2f; transform: scale(1.03); box-shadow: 0 0 18px rgba(198,40,40,.3); }
-    .btn:disabled { background: #1a1a1a; border-color: #2a1010; color: #555; cursor: not-allowed; transform: none; box-shadow: none; }
-    .btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    /* ========== MODO TELA CHEIA (sidebar oculta) ========== */
+    body.fullscreen-mode .sidebar { display: none; }
+    body.fullscreen-mode .topbar  { display: none; }
 
     /* ========== SIDEBAR ========== */
     .sidebar {
-      width: 200px; flex-shrink: 0;
-      background: #0f0f0f; border-left: 1px solid #1a1a1a;
+      width: 220px; flex-shrink: 0;
+      background: #111214; border-left: 1px solid #1e1f22;
       display: flex; flex-direction: column; overflow: hidden;
     }
     .sidebar-title {
       padding: 8px 10px 6px;
-      font-size: 0.65rem; font-weight: 700;
+      font-size: 0.63rem; font-weight: 700;
       letter-spacing: 0.08em; text-transform: uppercase;
-      color: #6b6f76; border-bottom: 1px solid #1a1a1a; flex-shrink: 0;
-    }
-    .sidebar-section { display: flex; flex-direction: column; min-height: 0; }
-
-    /* Mini-tiles */
-    .side-streams {
-      display: flex; flex-direction: column;
-      overflow-y: auto; flex-shrink: 0;
+      color: #6b6f76; border-bottom: 1px solid #1e1f22; flex-shrink: 0;
     }
 
-    /*
-     * Cada item da sidebar tem:
-     *  - o canvas do stream (sempre renderizando)
-     *  - overlay com "Assistir" no centro
-     *  - overlay de hover com botões ✕ e ⛶ (visível ao passar o mouse)
-     */
+    /* Mini-tiles sidebar (outras streams) */
+    .side-streams { display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; }
     .side-stream-item {
-      position: relative;
-      border-bottom: 1px solid #161616;
-      background: #111214;
+      position: relative; border-bottom: 1px solid #1a1a1a; background: #111214;
     }
-    /* Wrap do canvas — aspect-ratio 16:9 */
     .side-canvas-wrap {
-      position: relative;
-      width: 100%; aspect-ratio: 16 / 9;
+      position: relative; width: 100%; aspect-ratio: 16/9;
       background: #0a0a0a; overflow: hidden;
     }
-    .side-canvas-wrap canvas {
-      width: 100%; height: 100%;
-      object-fit: contain; display: block;
-    }
-
-    /* Overlay "Assistir" — sempre visível por cima do canvas */
+    .side-canvas-wrap canvas { width: 100%; height: 100%; object-fit: contain; display: block; }
     .side-overlay-watch {
       position: absolute; inset: 0;
       display: flex; align-items: center; justify-content: center;
-      pointer-events: none; /* o clique passa pro item pai */
+      pointer-events: none;
     }
     .side-watch-pill {
-      background: #5865f2;
-      border-radius: 999px;
-      padding: 5px 11px;
-      font-size: 0.70rem; font-weight: 600;
-      color: #fff;
+      background: #5865f2; border-radius: 999px;
+      padding: 5px 11px; font-size: 0.70rem; font-weight: 600; color: #fff;
       display: flex; align-items: center; gap: 5px;
       box-shadow: 0 2px 8px rgba(0,0,0,.5);
     }
     .side-watch-pill svg { width: 12px; height: 12px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
-    /* Overlay de hover — botões ✕ e ⛶ */
     .side-overlay-hover {
       position: absolute; inset: 0;
       background: rgba(0,0,0,.55);
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      opacity: 0; transition: opacity .15s;
-      z-index: 5;
+      opacity: 0; transition: opacity .15s; z-index: 5;
     }
     .side-stream-item:hover .side-overlay-hover { opacity: 1; }
-
     .side-action-btn {
       width: 30px; height: 30px;
-      background: rgba(20,20,20,.9);
-      border: 1px solid #444;
-      border-radius: 7px;
+      background: rgba(20,20,20,.9); border: 1px solid #444; border-radius: 7px;
       color: #fff; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 700;
-      transition: all .12s;
+      font-size: 13px; font-weight: 700; transition: all .12s;
     }
     .side-action-btn:hover { background: #c62828; border-color: #c62828; }
     .side-action-btn.expand:hover { background: #5865f2; border-color: #5865f2; }
     .side-action-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
-    /* Item em destaque (stream principal): borda vermelha, sem "Assistir" */
     .side-stream-item.is-focused { outline: 2px solid #c62828; outline-offset: -2px; cursor: default; }
     .side-stream-item.is-focused .side-overlay-watch { display: none; }
-    /* Itens não-focados têm canvas um pouco escurecido */
     .side-stream-item:not(.is-focused) .side-canvas-wrap canvas { opacity: 0.45; }
-
-    /* Nome embaixo */
     .side-stream-name {
       display: flex; align-items: center; gap: 5px;
-      padding: 4px 8px;
-      font-size: 0.71rem; color: #b5bac1;
-      pointer-events: none;
+      padding: 4px 8px; font-size: 0.71rem; color: #b5bac1; pointer-events: none;
     }
     .dot-green { width: 7px; height: 7px; border-radius: 50%; background: #3ba55d; flex-shrink: 0; }
 
-    /* Divisor */
-    .sidebar-divider { height: 1px; background: #1a1a1a; flex-shrink: 0; }
+    .sidebar-divider { height: 1px; background: #1e1f22; flex-shrink: 0; }
 
-    /* ---- Espectadores ---- */
+    /* Participantes na sidebar (quando há stream ativa) */
+    .sidebar-participants {
+      flex: 1; overflow-y: auto; padding: 6px 0 8px;
+    }
+    .sidebar-participants-header {
+      padding: 8px 10px 6px;
+      font-size: 0.63rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: #6b6f76; flex-shrink: 0;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .sidebar-p-badge {
+      background: #2b2d31; border-radius: 999px;
+      padding: 1px 7px; font-size: 0.68rem; color: #949ba4; font-weight: 600;
+    }
+    /* Item de participante na sidebar (só avatar grande + nome) */
+    .sb-participant {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 5px; padding: 10px 8px;
+      cursor: default;
+    }
+    .sb-participant-avatar {
+      width: 56px; height: 56px; border-radius: 50%;
+      object-fit: cover; border: 2px solid #2b2d31; background: #2b2d31;
+    }
+    .sb-participant-ph {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: #36393f; border: 2px solid #2b2d31;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; font-weight: 700; color: #b5bac1;
+    }
+    .sb-participant-name {
+      font-size: 0.72rem; color: #dcddde;
+      display: flex; align-items: center; gap: 4px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    /* Espectadores (modo idle) */
     .viewers-section { flex: 1; display: flex; flex-direction: column; min-height: 0; }
     .viewers-header {
       padding: 8px 10px 6px;
-      font-size: 0.65rem; font-weight: 700;
+      font-size: 0.63rem; font-weight: 700;
       letter-spacing: 0.08em; text-transform: uppercase;
       color: #6b6f76;
       display: flex; align-items: center; gap: 6px; flex-shrink: 0;
     }
     .viewers-count-badge {
-      background: #1a1a1a; border-radius: 999px;
+      background: #2b2d31; border-radius: 999px;
       padding: 1px 7px; font-size: 0.68rem; color: #949ba4; font-weight: 600;
     }
     .viewers-list { flex: 1; overflow-y: auto; padding: 4px 0 8px; }
@@ -251,75 +316,66 @@
       display: flex; align-items: center; gap: 8px;
       padding: 5px 10px; transition: background .12s;
     }
-    .viewer-item:hover { background: #161618; }
+    .viewer-item:hover { background: #18191c; }
     .viewer-avatar {
-      width: 32px; height: 32px; border-radius: 50%;
-      object-fit: cover; flex-shrink: 0;
-      border: 1px solid #2a2a2a; background: #1a1a1a;
+      width: 30px; height: 30px; border-radius: 50%;
+      object-fit: cover; flex-shrink: 0; background: #2b2d31;
     }
     .viewer-avatar-ph {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: #1e1f22; border: 1px solid #2a2a2a;
+      width: 30px; height: 30px; border-radius: 50%; background: #36393f;
       display: flex; align-items: center; justify-content: center;
-      font-size: 0.75rem; color: #6b6f76; font-weight: 600; flex-shrink: 0;
+      font-size: 0.72rem; color: #b5bac1; font-weight: 700; flex-shrink: 0;
     }
     .viewer-name {
       font-size: 0.78rem; color: #dcddde;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
-    /* Scrollbars finas */
+    /* scrollbars */
     .side-streams::-webkit-scrollbar,
-    .viewers-list::-webkit-scrollbar { width: 4px; }
-    .side-streams::-webkit-scrollbar-track,
-    .viewers-list::-webkit-scrollbar-track { background: transparent; }
+    .viewers-list::-webkit-scrollbar,
+    .sidebar-participants::-webkit-scrollbar { width: 4px; }
     .side-streams::-webkit-scrollbar-thumb,
-    .viewers-list::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
+    .viewers-list::-webkit-scrollbar-thumb,
+    .sidebar-participants::-webkit-scrollbar-thumb { background: #3a3c41; border-radius: 4px; }
 
     /* ========== MODAL QUALIDADE ========== */
     .modal {
-      position: fixed; inset: 0; background: rgba(0,0,0,.7);
+      position: fixed; inset: 0; background: rgba(0,0,0,.75);
       display: flex; align-items: center; justify-content: center;
-      z-index: 100; backdrop-filter: blur(4px);
+      z-index: 100; backdrop-filter: blur(6px);
     }
     .modal-card {
-      background: #111214; border: 1px solid #2a1010;
-      border-radius: 14px; padding: 22px; width: 90%; max-width: 320px;
+      background: #2b2d31; border-radius: 14px;
+      padding: 24px; width: 90%; max-width: 360px;
     }
-    .modal-card h2 { font-size: 0.95rem; margin-bottom: 3px; color: #e0e0e0; }
-    .modal-card .sub { font-size: 0.75rem; color: #949ba4; margin-bottom: 14px; }
-    .quality-list { display: flex; flex-direction: column; gap: 7px; }
+    .modal-card h2 { font-size: 1.05rem; margin-bottom: 6px; color: #fff; font-weight: 700; }
+    .modal-card .sub { font-size: 0.78rem; color: #949ba4; margin-bottom: 18px; line-height: 1.4; }
+    .quality-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .quality-opt {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 9px 12px; background: #1a1a1a; border: 1px solid #2a1010;
-      border-radius: 9px; color: #fff; font-size: 0.82rem; cursor: pointer; transition: all .15s;
+      padding: 12px 14px; background: #1e1f22; border: 1.5px solid #3a3c41;
+      border-radius: 10px; color: #fff; font-size: 0.82rem;
+      cursor: pointer; transition: all .15s; text-align: left;
     }
-    .quality-opt:hover { border-color: #c62828; background: #1e1210; }
-    .quality-opt.active { border-color: #c62828; background: rgba(198,40,40,.15); }
-    .quality-opt .qlabel { font-weight: 600; }
-    .quality-opt .qinfo { font-size: 0.72rem; color: #949ba4; }
-    .quality-opt .qcheck {
-      width: 16px; height: 16px; border-radius: 50%; border: 2px solid #555;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    .quality-opt:hover { border-color: #5865f2; background: #232428; }
+    .quality-opt.active { border-color: #5865f2; background: rgba(88,101,242,.15); }
+    .quality-opt .qlabel { font-weight: 700; display: block; margin-bottom: 3px; }
+    .quality-opt .qinfo  { font-size: 0.74rem; color: #949ba4; display: block; }
+    .modal-note { font-size: 0.75rem; color: #6b6f76; margin-bottom: 16px; line-height: 1.4; }
+    .modal-actions { display: flex; justify-content: flex-end; }
+    .modal-close-btn {
+      padding: 8px 24px; background: #5865f2; border: none;
+      border-radius: 999px; color: #fff; font-size: 0.85rem;
+      font-weight: 600; cursor: pointer; transition: background .15s;
     }
-    .quality-opt.active .qcheck { border-color: #c62828; background: #c62828; }
-    .quality-opt.active .qcheck::after {
-      content: ''; display: block; width: 9px; height: 9px;
-      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") center/contain no-repeat;
-    }
-    .modal-actions { margin-top: 12px; display: flex; justify-content: flex-end; }
-    .modal-actions button {
-      padding: 7px 18px; background: #c62828; border: none;
-      border-radius: 7px; color: #fff; font-size: 0.82rem; font-weight: 500; cursor: pointer;
-    }
-    .modal-actions button:hover { background: #d32f2f; }
+    .modal-close-btn:hover { background: #4752c4; }
 
     /* ========== TOAST ========== */
     .toast {
       position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
-      background: #1a1a1a; border: 1px solid #c62828; color: #dbdee1;
+      background: #2b2d31; border: 1px solid #3a3c41; color: #dbdee1;
       padding: 7px 14px; border-radius: 9px; font-size: 0.82rem;
-      z-index: 200; box-shadow: 0 0 10px rgba(198,40,40,.2);
+      z-index: 200; box-shadow: 0 4px 16px rgba(0,0,0,.4);
     }
     .toast.err { border-color: #ff1744; color: #ff8a80; }
   </style>
@@ -327,16 +383,13 @@
 <body>
 
   <!-- TOPBAR -->
-  <div class="topbar">
+  <div class="topbar" id="topbar">
     <img class="logo" src="/foto/1321a2929b5943c3cc2be6e3722c2552.png" alt="NEXT">
     <div id="people" class="pill">…</div>
     <div class="topbar-right">
       <button class="icon-btn" id="muteBtn" title="Mutear áudio">
         <svg id="micOn" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
         <svg id="micOff" viewBox="0 0 24 24" style="display:none"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2c0 .76-.13 1.49-.35 2.17"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-      </button>
-      <button class="icon-btn" id="settingsBtn" title="Qualidade">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1z"/></svg>
       </button>
       <div id="userChip" class="user-chip" hidden>
         <img id="userAvatar" alt="">
@@ -350,63 +403,94 @@
 
     <!-- Área central -->
     <div class="main-area" id="mainArea">
-      <!-- Estado vazio / conectando -->
-      <div id="emptyState" class="empty">
-        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="3" width="20" height="14" rx="2"/>
-          <path d="M8 21h8"/><path d="M12 17v4"/>
-        </svg>
-        <h1 id="emptyTitle">Conectando…</h1>
-        <p id="emptyText" class="muted-text">Autenticando com o Discord</p>
-        <div class="spinner" id="emptySpinner"></div>
-        <div class="dock" id="mainDock" hidden>
-          <button class="btn" id="btnTela" disabled>
-            <svg viewBox="0 0 24 24"><path d="M3 5h18v11H3z"/><path d="M8 20h8"/></svg>
-            Tela
+
+      <!-- Estado idle -->
+      <div id="idleView" class="idle-view">
+        <div id="participantsGrid" class="participants-grid"></div>
+        <div id="connectMsg" class="connect-msg">
+          <div class="spinner"></div>
+          <span id="connectText">Conectando…</span>
+        </div>
+      </div>
+
+      <!-- Tile de stream principal (canvas injetado pelo JS) -->
+      <div id="mainTile" class="main-tile" hidden>
+        <!-- canvas vai aqui -->
+        <!-- Label "você" canto superior direito (só aparece se for a sua própria stream) -->
+        <div class="you-label" id="youLabel" hidden>você</div>
+        <!-- Barra inferior: nome + contador -->
+        <div class="stream-bottom-bar" id="streamBottomBar">
+          <div class="stream-name-pill">
+            <span class="live-dot"></span>
+            <span id="mainLabelName">Transmissão</span>
+            <span class="badge" id="mainLabelBadge">tela</span>
+          </div>
+          <div class="viewer-count-bar">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span id="viewerCountMain">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dock flutuante (hover) — aparece tanto no idle quanto no live -->
+      <div class="live-dock" id="liveDock">
+        <!-- Grupo 1: tela, câmera, config -->
+        <div class="dock-group">
+          <button class="dock-btn" id="btnTela" disabled title="Transmitir tela">
+            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="13" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>
           </button>
-          <button class="btn" id="btnCamera" disabled>
+          <button class="dock-btn" id="btnCamera" disabled title="Transmitir câmera">
             <svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-            Câmera
+          </button>
+          <button class="dock-btn" id="settingsBtn" title="Qualidade">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1z"/></svg>
+          </button>
+        </div>
+        <!-- Grupo 2: abrir no site / tela cheia -->
+        <div class="dock-group" id="dockGroupLive" hidden>
+          <!-- Abrir no site externo -->
+          <button class="dock-btn" id="btnOpenSite" title="Ver no site">
+            <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </button>
+          <!-- Tela cheia -->
+          <button class="dock-btn" id="btnFullscreen" title="Tela cheia">
+            <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
           </button>
         </div>
       </div>
 
-      <!-- Tile principal -->
-      <div id="mainTile" class="main-tile" hidden>
-        <!-- canvas injetado pelo JS aqui -->
-        <div class="stream-label" id="mainLabel">
-          <span class="live-dot"></span>
-          <span id="mainLabelName">Transmissão</span>
-          <span class="badge" id="mainLabelBadge">tela</span>
-        </div>
-        <button class="close-main" id="closeMain" title="Fechar">✕</button>
-      </div>
     </div>
 
     <!-- SIDEBAR -->
     <div class="sidebar" id="sidebar">
-      <!-- Outras transmissões -->
-      <div class="sidebar-section" id="sideStreamsSection" hidden>
+
+      <!-- Seção: outras transmissões (quando há mais de 1 stream) -->
+      <div id="sideStreamsSection" hidden>
         <div class="sidebar-title" id="sideStreamsTitle">Outra Transmissão</div>
         <div class="side-streams" id="sideStreamsList"></div>
+        <div class="sidebar-divider"></div>
       </div>
 
-      <div class="sidebar-divider" id="sidebarDivider" hidden></div>
+      <!-- Participantes na sidebar quando há stream ativa -->
+      <div id="sbParticipantsSection" hidden>
+        <div class="sidebar-participants-header">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Na sala
+          <span class="sidebar-p-badge" id="sbParticipantsBadge">0</span>
+        </div>
+        <div class="sidebar-participants" id="sbParticipantsList"></div>
+      </div>
 
-      <!-- Espectadores -->
-      <div class="viewers-section">
+      <!-- Espectadores (modo idle / sem stream) -->
+      <div class="viewers-section" id="viewersSection">
         <div class="viewers-header">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Assistindo
           <span class="viewers-count-badge" id="viewersBadge">0</span>
         </div>
         <div class="viewers-list" id="viewersList"></div>
       </div>
+
     </div>
   </div>
 
@@ -414,14 +498,15 @@
   <div id="qualityModal" class="modal" hidden>
     <div class="modal-card">
       <h2>Qualidade da transmissão</h2>
-      <p class="sub">Mais FPS = movimento mais fluido, mas exige mais upload.</p>
-      <div class="quality-list">
-        <button class="quality-opt" data-q="1500000" data-fps="30"><span class="qlabel">Leve</span><span class="qinfo">30 fps · 1,5 Mb/s</span><span class="qcheck"></span></button>
-        <button class="quality-opt active" data-q="2500000" data-fps="30"><span class="qlabel">Equilibrado</span><span class="qinfo">30 fps · 2,5 Mb/s</span><span class="qcheck"></span></button>
-        <button class="quality-opt" data-q="5000000" data-fps="60"><span class="qlabel">Nítido</span><span class="qinfo">60 fps · 5 Mb/s</span><span class="qcheck"></span></button>
-        <button class="quality-opt" data-q="8000000" data-fps="120"><span class="qlabel">Máximo</span><span class="qinfo">120 fps · 8 Mb/s</span><span class="qcheck"></span></button>
+      <p class="sub">A opção equilibrada é a melhor para a maioria. 60 fps exige mais upload e codificação por hardware.</p>
+      <div class="quality-grid">
+        <button class="quality-opt" data-q="1500000" data-fps="30"><span class="qlabel">Leve</span><span class="qinfo">1,5 Mb/s · 30 fps</span></button>
+        <button class="quality-opt active" data-q="2500000" data-fps="30"><span class="qlabel">Equilibrado</span><span class="qinfo">2,5 Mb/s · 30 fps</span></button>
+        <button class="quality-opt" data-q="5000000" data-fps="60"><span class="qlabel">Nítido</span><span class="qinfo">5 Mb/s · 60 fps</span></button>
+        <button class="quality-opt" data-q="8000000" data-fps="60"><span class="qlabel">Máximo</span><span class="qinfo">8 Mb/s · 60 fps</span></button>
       </div>
-      <div class="modal-actions"><button id="qualityClose">Concluir</button></div>
+      <p class="modal-note">A resolução é limitada a 1080p. O navegador reduz quadros automaticamente se o computador não acompanhar.</p>
+      <div class="modal-actions"><button class="modal-close-btn" id="qualityClose">Concluir</button></div>
     </div>
   </div>
 
@@ -434,15 +519,17 @@
     const BASE = new URLSearchParams(location.search).has('frame_id') ? '/.proxy' : '';
     const $ = (id) => document.getElementById(id);
 
-    let discordSdk = null;
-    let session   = null;
-    let ws        = null;
-    let backoff   = 1000;
+    let discordSdk   = null;
+    let session      = null;
+    let ws           = null;
+    let backoff      = 1000;
+    let myUserId     = null;   // id do usuário logado
 
-    const players = new Map();   // slot → StreamPlayer
-    let focusedSlot = null;      // slot em destaque no centro
+    const players    = new Map();   // slot → StreamPlayer
+    let focusedSlot  = null;
     let participants = [];
-    let audioMuted = localStorage.getItem('nextMuted') === 'true';
+    let audioMuted   = localStorage.getItem('nextMuted') === 'true';
+    let isFullscreen = false;
 
     // ── toast ──────────────────────────────────────────────────────────────
     function toast(msg, err = false) {
@@ -471,7 +558,7 @@
       } finally { clearTimeout(t); }
     }
 
-    // ── helpers de decodificação ───────────────────────────────────────────
+    // ── helpers de decode ──────────────────────────────────────────────────
     function b64ToU8(b64) {
       const bin = atob(b64), out = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
@@ -484,20 +571,17 @@
     // ── StreamPlayer ───────────────────────────────────────────────────────
     class StreamPlayer {
       constructor(info) {
-        this.slot      = info.slot;
-        this.info      = info;
-        this.config    = info.config    || null;
+        this.slot        = info.slot;
+        this.info        = info;
+        this.config      = info.config      || null;
         this.audioConfig = info.audioConfig || null;
 
-        // Um único canvas por player — usado tanto no side tile quanto no centro.
-        // Quando o player está em destaque, inserimos o canvas no mainTile.
-        // Quando está na sidebar, fica no sideCanvas (mas é o mesmo elemento).
         this.canvas = document.createElement('canvas');
         this.ctx    = this.canvas.getContext('2d', { alpha: false });
 
-        this.decoder   = null;
+        this.decoder    = null;
         this.waitingKey = true;
-        this.pending   = [];
+        this.pending    = [];
 
         this.audioDecoder = null;
         this.audioCtx     = null;
@@ -506,62 +590,48 @@
         this._buildSideItem(info);
       }
 
-      // Constrói o item da sidebar
       _buildSideItem(info) {
         this.sideItem = document.createElement('div');
         this.sideItem.className = 'side-stream-item';
         this.sideItem.dataset.slot = this.slot;
 
-        // Wrap do canvas
         this.canvasWrap = document.createElement('div');
         this.canvasWrap.className = 'side-canvas-wrap';
         this.canvasWrap.appendChild(this.canvas);
 
-        // Overlay "Assistir" (sempre visível quando não está em destaque)
+        // Overlay "Assistir"
         const watchOverlay = document.createElement('div');
         watchOverlay.className = 'side-overlay-watch';
-        watchOverlay.innerHTML = `
-          <div class="side-watch-pill">
-            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
-            Assistir tela
-          </div>`;
+        watchOverlay.innerHTML = `<div class="side-watch-pill">
+          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+          Assistir tela
+        </div>`;
         this.canvasWrap.appendChild(watchOverlay);
 
-        // Overlay de hover — botões ✕ e ⛶
+        // Overlay hover (✕ e ⛶)
         const hoverOverlay = document.createElement('div');
         hoverOverlay.className = 'side-overlay-hover';
 
-        // Botão ✕ — remove da sidebar (não destrói o player, só desfoca/fecha)
         const btnClose = document.createElement('button');
         btnClose.className = 'side-action-btn';
         btnClose.title = 'Fechar';
-        btnClose.innerHTML = '✕';
-        btnClose.addEventListener('click', (e) => {
-          e.stopPropagation();
-          closeStream(this.slot);
-        });
+        btnClose.textContent = '✕';
+        btnClose.addEventListener('click', (e) => { e.stopPropagation(); closeStream(this.slot); });
 
-        // Botão ⛶ — coloca no centro
         const btnExpand = document.createElement('button');
         btnExpand.className = 'side-action-btn expand';
         btnExpand.title = 'Colocar no centro';
         btnExpand.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>`;
-        btnExpand.addEventListener('click', (e) => {
-          e.stopPropagation();
-          setFocus(this.slot);
-        });
+        btnExpand.addEventListener('click', (e) => { e.stopPropagation(); setFocus(this.slot); });
 
         hoverOverlay.append(btnClose, btnExpand);
         this.canvasWrap.appendChild(hoverOverlay);
 
-        // Nome
         const nameRow = document.createElement('div');
         nameRow.className = 'side-stream-name';
         nameRow.innerHTML = `<span class="dot-green"></span><span>${info.name || 'Transmissão'}</span>`;
 
         this.sideItem.append(this.canvasWrap, nameRow);
-
-        // Clicar no item (fora dos botões de hover) → colocar no centro
         this.sideItem.addEventListener('click', () => setFocus(this.slot));
       }
 
@@ -609,7 +679,7 @@
         const dv = new DataView(buffer);
         const tipo = dv.getUint8(1);
         if (tipo === 3) return this.pushAudio(buffer);
-        const ts   = dv.getFloat64(2);
+        const ts = dv.getFloat64(2);
         const data = new Uint8Array(buffer, 18);
         const chunk = new EncodedVideoChunk({
           type: tipo === 1 ? 'key' : 'delta',
@@ -661,8 +731,7 @@
         const ctx = this.ensureAudio(); if (!ctx) return;
         if (!audioMuted && ctx.state === 'suspended') ctx.resume().catch(() => {});
         const dv = new DataView(buffer);
-        const ts   = dv.getFloat64(2);
-        const data = new Uint8Array(buffer, 18);
+        const ts = dv.getFloat64(2), data = new Uint8Array(buffer, 18);
         if (!this.audioDecoder || this.audioDecoder.state !== 'configured') return;
         try {
           this.audioDecoder.decode(new EncodedAudioChunk({
@@ -688,8 +757,7 @@
         const src = ctx.createBufferSource();
         src.buffer = buf; src.connect(ctx.destination);
         const at = Math.max(ctx.currentTime + 0.05, this.nextAudioAt);
-        src.start(at);
-        this.nextAudioAt = at + buf.duration;
+        src.start(at); this.nextAudioAt = at + buf.duration;
       }
 
       destroy() {
@@ -700,97 +768,165 @@
       }
     }
 
+    // ── grid de participantes (idle) ───────────────────────────────────────
+    function renderParticipantsGrid() {
+      const grid = $('participantsGrid');
+      grid.innerHTML = '';
+      if (players.size > 0) { grid.hidden = true; return; }
+      grid.hidden = false;
+      if (!participants.length) return;
+      for (const p of participants) {
+        const tile = document.createElement('div');
+        tile.className = 'participant-tile';
+        const avEl = makeAvatar(p, 'participant-avatar', 'participant-avatar-ph', 80);
+        const nameEl = document.createElement('div');
+        nameEl.className = 'participant-name';
+        nameEl.textContent = p.name || 'Convidado';
+        tile.append(avEl, nameEl);
+        grid.appendChild(tile);
+      }
+    }
+
+    // ── sidebar de participantes (durante stream) ──────────────────────────
+    function renderSbParticipants() {
+      const list = $('sbParticipantsList');
+      list.innerHTML = '';
+      $('sbParticipantsBadge').textContent = participants.length;
+      for (const p of participants) {
+        const item = document.createElement('div');
+        item.className = 'sb-participant';
+        const avEl = makeAvatar(p, 'sb-participant-avatar', 'sb-participant-ph', 56);
+        const nameEl = document.createElement('div');
+        nameEl.className = 'sb-participant-name';
+        if (p.id === myUserId) {
+          nameEl.innerHTML = `<span class="dot-green"></span>${p.name || 'Você'}`;
+        } else {
+          nameEl.innerHTML = `<span class="dot-green"></span>${p.name || 'Convidado'}`;
+        }
+        item.append(avEl, nameEl);
+        list.appendChild(item);
+      }
+    }
+
+    // ── sidebar de espectadores (idle) ─────────────────────────────────────
+    function renderViewers() {
+      const list = $('viewersList');
+      list.innerHTML = '';
+      $('viewersBadge').textContent = participants.length;
+      for (const p of participants) {
+        const item = document.createElement('div');
+        item.className = 'viewer-item';
+        const avEl = makeAvatar(p, 'viewer-avatar', 'viewer-avatar-ph', 30);
+        const nameEl = document.createElement('div');
+        nameEl.className = 'viewer-name';
+        nameEl.textContent = p.name || 'Convidado';
+        item.append(avEl, nameEl);
+        list.appendChild(item);
+      }
+    }
+
+    function makeAvatar(p, imgClass, phClass, size) {
+      if (p.av) {
+        const img = document.createElement('img');
+        img.className = imgClass;
+        img.src = `https://cdn.discordapp.com/avatars/${p.id}/${p.av}.png?size=128`;
+        img.alt = p.name;
+        img.style.width = img.style.height = size + 'px';
+        img.onerror = () => img.replaceWith(makePh(p.name, phClass, size));
+        return img;
+      }
+      return makePh(p.name, phClass, size);
+    }
+
+    function makePh(name, cls, size) {
+      const el = document.createElement('div');
+      el.className = cls;
+      el.style.width = el.style.height = size + 'px';
+      el.textContent = (name || '?').charAt(0).toUpperCase();
+      return el;
+    }
+
+    // ── atualiza estado visual da sidebar ──────────────────────────────────
+    function updateSidebar() {
+      const hasStream = players.size > 0 && focusedSlot != null;
+
+      // Seção de streams alternativas
+      const otherCount = players.size - (focusedSlot != null ? 1 : 0);
+      $('sideStreamsSection').hidden = otherCount <= 0;
+      $('sideStreamsTitle').textContent = otherCount > 1 ? 'Outras Transmissões' : 'Outra Transmissão';
+
+      // Quando há stream: mostra participantes; esconde lista de espectadores
+      $('sbParticipantsSection').hidden = !hasStream;
+      $('viewersSection').hidden        =  hasStream;
+
+      if (hasStream) {
+        renderSbParticipants();
+      } else {
+        renderViewers();
+      }
+
+      // Grupo 2 do dock (abrir site / tela cheia) só aparece quando há stream
+      $('dockGroupLive').hidden = !hasStream;
+    }
+
+    function updatePeople() {
+      const n = participants.length;
+      $('people').textContent = players.size > 0
+        ? `${players.size} transmitindo · ${n} na sala`
+        : `${n} na sala`;
+      $('viewerCountMain').textContent = n;
+    }
+
     // ── foco ───────────────────────────────────────────────────────────────
-    /**
-     * Coloca um stream no centro.
-     * O canvas do player é movido para dentro do #mainTile.
-     * Na sidebar, o mesmo canvas ainda fica no sideItem como thumbnail —
-     * mas só quando não está em destaque (via CSS .is-focused o canvas
-     * aparece no canvasWrap, escurecido, enquanto no main aparece em full).
-     *
-     * Tecnicamente usamos UM canvas e o movemos entre os dois contêineres.
-     * Quando está no mainTile, o sideCanvasWrap fica vazio (é esperado —
-     * usamos um canvas placeholder para manter o aspect-ratio da sidebar).
-     */
     function setFocus(slot) {
       const prev = focusedSlot;
       focusedSlot = slot;
 
-      // Devolve o canvas do player anterior para a sidebar
+      // Devolve canvas anterior para a sidebar
       if (prev != null && prev !== slot) {
         const pp = players.get(prev);
         if (pp) {
           pp.canvasWrap.insertBefore(pp.canvas, pp.canvasWrap.firstChild);
+          pp.canvas.style.cssText = '';
           pp.sideItem.classList.remove('is-focused');
         }
       }
 
-      // Atualiza marcações
-      for (const [s, p] of players) {
-        p.sideItem.classList.toggle('is-focused', s === slot);
-      }
+      for (const [s, p] of players) p.sideItem.classList.toggle('is-focused', s === slot);
 
       const p = players.get(slot);
       if (p) {
-        // Move o canvas para o mainTile (antes do label)
-        const label = $('mainLabel');
-        $('mainTile').insertBefore(p.canvas, label);
-        p.canvas.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;position:absolute;inset:0;';
+        // Move canvas para o mainTile
+        const bar = $('streamBottomBar');
+        $('mainTile').insertBefore(p.canvas, bar);
+        p.canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;';
 
         $('mainLabelName').textContent = p.info.name || 'Transmissão';
         $('mainLabelBadge').textContent = p.info.fonte === 'camera' ? 'cam' : 'tela';
-        $('mainTile').hidden  = false;
-        $('emptyState').hidden = true;
+
+        // "você" aparece se for a própria stream do usuário
+        $('youLabel').hidden = (p.info.userId !== myUserId);
+
+        $('mainTile').hidden = false;
+        $('idleView').hidden = true;
       } else {
-        $('mainTile').hidden   = true;
-        $('emptyState').hidden = false;
-        $('emptySpinner').hidden = true;
-        if (players.size > 0) {
-          $('emptyTitle').textContent = 'Selecione uma transmissão';
-          $('emptyText').textContent  = 'Clique em uma transmissão ao lado.';
-        } else {
-          $('emptyTitle').textContent = 'Ninguém transmitindo';
-          $('emptyText').textContent  = 'Use os botões abaixo para começar.';
-        }
-        $('mainDock').hidden = false;
+        $('mainTile').hidden = true;
+        $('idleView').hidden = false;
+        renderParticipantsGrid();
       }
 
-      updateSidebarSection();
+      updateSidebar();
       updatePeople();
     }
 
-    /**
-     * Fecha (destrói) um stream da sidebar via botão ✕.
-     * Se era o focado, passa o foco para o próximo disponível.
-     */
     function closeStream(slot) {
-      const p = players.get(slot);
-      if (!p) return;
-
-      // Se estava em destaque, devolve o canvas antes de destruir
       if (focusedSlot === slot) {
-        $('mainTile').hidden = true;
-        focusedSlot = null;
+        $('mainTile').hidden = true; focusedSlot = null;
       }
-
-      p.destroy();
-      players.delete(slot);
-
-      // Tenta focar no próximo
+      const p = players.get(slot);
+      if (p) { p.destroy(); players.delete(slot); }
       const next = players.size > 0 ? players.keys().next().value : null;
       setFocus(next);
-    }
-
-    function updateSidebarSection() {
-      const hasSide = players.size > 0;
-      $('sideStreamsSection').hidden = !hasSide;
-      $('sidebarDivider').hidden     = !hasSide;
-
-      // Título dinâmico
-      const others = players.size - (focusedSlot != null ? 1 : 0);
-      $('sideStreamsTitle').textContent = others > 1
-        ? 'Outras Transmissões'
-        : 'Outra Transmissão';
     }
 
     // ── add / remove ────────────────────────────────────────────────────────
@@ -799,11 +935,8 @@
       const p = new StreamPlayer(info);
       players.set(info.slot, p);
       $('sideStreamsList').appendChild(p.sideItem);
-
-      // Primeiro stream → vai direto para o centro
       if (focusedSlot == null) setFocus(info.slot);
-      else updateSidebarSection();
-
+      else updateSidebar();
       updatePeople();
       return p;
     }
@@ -812,8 +945,7 @@
       const p = players.get(slot);
       if (!p) return;
       if (focusedSlot === slot) focusedSlot = null;
-      p.destroy();
-      players.delete(slot);
+      p.destroy(); players.delete(slot);
       const next = players.size > 0 ? players.keys().next().value : null;
       setFocus(next);
     }
@@ -825,138 +957,38 @@
       updatePeople();
     }
 
-    // ── UI ─────────────────────────────────────────────────────────────────
-    function updatePeople() {
-      const n = participants.length;
-      $('people').textContent = players.size > 0
-        ? `${players.size} transmitindo · ${n} na sala`
-        : `${n} na sala`;
-      $('viewersBadge').textContent = n;
-    }
-
-    function renderViewers() {
-      const list = $('viewersList');
-      list.innerHTML = '';
-      for (const p of participants) {
-        const item = document.createElement('div');
-        item.className = 'viewer-item';
-
-        let avEl;
-        if (p.av) {
-          avEl = document.createElement('img');
-          avEl.className = 'viewer-avatar';
-          avEl.src = `https://cdn.discordapp.com/avatars/${p.id}/${p.av}.png?size=64`;
-          avEl.alt = p.name;
-          avEl.onerror = () => avEl.replaceWith(placeholder(p.name));
-        } else {
-          avEl = placeholder(p.name);
-        }
-
-        const nameEl = document.createElement('div');
-        nameEl.className = 'viewer-name';
-        nameEl.textContent = p.name || 'Convidado';
-
-        item.append(avEl, nameEl);
-        list.appendChild(item);
-      }
-    }
-
-    function placeholder(name) {
-      const el = document.createElement('div');
-      el.className = 'viewer-avatar-ph';
-      el.textContent = (name || '?').charAt(0).toUpperCase();
-      return el;
-    }
-
-    function showEmpty(title, text) {
-      $('emptyTitle').textContent = title;
-      $('emptyText').textContent  = text;
-      $('emptyState').hidden = false;
-      $('emptySpinner').hidden = true;
-      $('mainTile').hidden = true;
-    }
-
-    // ── botão ✕ do main tile ────────────────────────────────────────────────
-    $('closeMain').addEventListener('click', () => {
-      if (focusedSlot == null) return;
-
-      // Devolve o canvas para a sidebar
-      const p = players.get(focusedSlot);
-      if (p) {
-        p.canvasWrap.insertBefore(p.canvas, p.canvasWrap.firstChild);
-        p.canvas.style.cssText = '';
-        p.sideItem.classList.remove('is-focused');
-      }
-      focusedSlot = null;
-      $('mainTile').hidden = true;
-
-      if (players.size > 0) {
-        showEmpty('Selecione uma transmissão', 'Clique em uma transmissão ao lado.');
-        $('mainDock').hidden = false;
+    // ── tela cheia ─────────────────────────────────────────────────────────
+    function toggleFullscreen() {
+      isFullscreen = !isFullscreen;
+      document.body.classList.toggle('fullscreen-mode', isFullscreen);
+      // Atualiza ícone do botão
+      const btn = $('btnFullscreen');
+      if (isFullscreen) {
+        btn.title = 'Sair da tela cheia';
+        btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>`;
       } else {
-        showEmpty('Ninguém transmitindo', 'Use os botões abaixo para começar.');
-        $('mainDock').hidden = false;
+        btn.title = 'Tela cheia';
+        btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>`;
       }
+    }
 
-      updateSidebarSection();
-      updatePeople();
+    $('btnFullscreen').addEventListener('click', toggleFullscreen);
+
+    // Sai da tela cheia com Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isFullscreen) toggleFullscreen();
     });
 
-    // ── WebSocket ──────────────────────────────────────────────────────────
-    function connectViewer() {
+    // ── abrir no site ──────────────────────────────────────────────────────
+    $('btnOpenSite').addEventListener('click', () => {
       if (!session) return;
-      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-      ws = new WebSocket(`${proto}://${location.host}${BASE}/ws?t=${encodeURIComponent(session.viewerToken)}`);
-      ws.binaryType = 'arraybuffer';
-      let openedOnce = false;
+      // Abre a página de share como espectador, passando o viewerToken
+      const url = new URL(location.href.split('?')[0]);
+      url.searchParams.set('t', session.viewerToken);
+      window.open(url.toString(), '_blank');
+    });
 
-      ws.addEventListener('open', () => { openedOnce = true; backoff = 1000; updatePeople(); });
-
-      ws.addEventListener('message', (e) => {
-        if (typeof e.data !== 'string') {
-          const slot = new DataView(e.data).getUint8(0);
-          players.get(slot)?.pushBinary(e.data);
-          return;
-        }
-        let msg; try { msg = JSON.parse(e.data); } catch { return; }
-
-        switch (msg.type) {
-          case 'state':
-            participants = msg.participants ?? [];
-            reconcile(msg.streams ?? []);
-            renderViewers();
-            break;
-          case 'stream-start': addStream(msg); break;
-          case 'stream-stop':  removeStream(msg.slot); break;
-          case 'config': {
-            const p = players.get(msg.slot);
-            if (p) p.setVideoConfig(msg.config);
-            break;
-          }
-          case 'audio-config': {
-            const p = players.get(msg.slot);
-            if (p) p.setAudioConfig(msg.config);
-            break;
-          }
-          case 'room-gone': toast('A sala foi fechada.', true); break;
-          case 'error':     toast(msg.message || 'Erro na sala.', true); break;
-        }
-      });
-
-      ws.addEventListener('close', () => {
-        for (const p of players.values()) p.destroy();
-        players.clear(); focusedSlot = null;
-        if (!session) return;
-        if (!openedOnce) showEmpty('Falhou', 'Não foi possível conectar à sala.');
-        else             showEmpty('Reconectando…', 'A conexão com a sala caiu.');
-        setTimeout(connectViewer, backoff);
-        backoff = Math.min(backoff * 2, 15000);
-      });
-
-      ws.addEventListener('error', () => ws.close());
-    }
-
-    // ── abrir share ────────────────────────────────────────────────────────
+    // ── abrir share (transmitir) ───────────────────────────────────────────
     async function abrirShare(fonte) {
       if (!session) return;
       const url = new URL(session.shareUrl);
@@ -965,13 +997,12 @@
       url.searchParams.set('q',     q.q);
       url.searchParams.set('fps',   q.fps);
       url.searchParams.set('fonte', fonte);
-
       if (discordSdk?.commands?.openExternalLink) {
         try {
           const r = await discordSdk.commands.openExternalLink({ url: url.toString() });
           if (r?.opened === false) toast('Você recusou abrir o link.', true);
           return;
-        } catch (err) { toast('Não foi possível abrir o link: ' + err.message, true); return; }
+        } catch (err) { toast('Não foi possível abrir: ' + err.message, true); return; }
       }
       window.open(url.toString(), '_blank');
     }
@@ -988,9 +1019,9 @@
         }
       }
       $('micOn').style.display  = audioMuted ? 'none' : '';
-      $('micOff').style.display = audioMuted ? '' : 'none';
+      $('micOff').style.display = audioMuted ? ''     : 'none';
       $('muteBtn').classList.toggle('muted', audioMuted);
-      $('muteBtn').title = audioMuted ? 'Desmutear áudio' : 'Mutear áudio';
+      $('muteBtn').title = audioMuted ? 'Desmutear' : 'Mutear';
     }
     applyMute();
     $('muteBtn').addEventListener('click', () => {
@@ -998,8 +1029,6 @@
       localStorage.setItem('nextMuted', audioMuted);
       applyMute();
     });
-
-    // Retoma áudio no primeiro clique
     document.addEventListener('click', () => {
       if (!audioMuted) for (const p of players.values()) p.audioCtx?.resume?.().catch(() => {});
     }, { capture: true });
@@ -1024,11 +1053,62 @@
     $('settingsBtn').addEventListener('click', () => { $('qualityModal').hidden = false; });
     $('qualityClose').addEventListener('click', () => {
       $('qualityModal').hidden = true;
-      toast(`Qualidade: ${selectedQuality.fps} fps`);
+      if (ws?.readyState === 1) {
+        ws.send(JSON.stringify({ type: 'config-broadcast', opcoes: { q: selectedQuality.q, fps: selectedQuality.fps } }));
+      }
     });
     $('qualityModal').addEventListener('click', e => {
       if (e.target === $('qualityModal')) $('qualityModal').hidden = true;
     });
+
+    // ── WebSocket ──────────────────────────────────────────────────────────
+    function connectViewer() {
+      if (!session) return;
+      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+      ws = new WebSocket(`${proto}://${location.host}${BASE}/ws?t=${encodeURIComponent(session.viewerToken)}`);
+      ws.binaryType = 'arraybuffer';
+      let openedOnce = false;
+
+      ws.addEventListener('open', () => { openedOnce = true; backoff = 1000; updatePeople(); });
+
+      ws.addEventListener('message', (e) => {
+        if (typeof e.data !== 'string') {
+          const slot = new DataView(e.data).getUint8(0);
+          players.get(slot)?.pushBinary(e.data); return;
+        }
+        let msg; try { msg = JSON.parse(e.data); } catch { return; }
+        switch (msg.type) {
+          case 'state':
+            participants = msg.participants ?? [];
+            reconcile(msg.streams ?? []);
+            renderParticipantsGrid();
+            updateSidebar();
+            updatePeople();
+            break;
+          case 'stream-start': addStream(msg); break;
+          case 'stream-stop':  removeStream(msg.slot); break;
+          case 'config': players.get(msg.slot)?.setVideoConfig(msg.config); break;
+          case 'audio-config': players.get(msg.slot)?.setAudioConfig(msg.config); break;
+          case 'room-gone': toast('A sala foi fechada.', true); break;
+          case 'error':     toast(msg.message || 'Erro na sala.', true); break;
+        }
+      });
+
+      ws.addEventListener('close', () => {
+        for (const p of players.values()) p.destroy();
+        players.clear(); focusedSlot = null;
+        if (!session) return;
+        $('idleView').hidden = false;
+        $('mainTile').hidden = true;
+        $('participantsGrid').hidden = true;
+        $('connectMsg').hidden = false;
+        $('connectText').textContent = openedOnce ? 'Reconectando…' : 'Não foi possível conectar.';
+        setTimeout(connectViewer, backoff);
+        backoff = Math.min(backoff * 2, 15000);
+      });
+
+      ws.addEventListener('error', () => ws.close());
+    }
 
     // ── Discord SDK ─────────────────────────────────────────────────────────
     (async () => {
@@ -1043,6 +1123,7 @@
 
         const { access_token } = await api('/api/token', { code });
         const auth = await discordSdk.commands.authenticate({ access_token });
+        myUserId = auth.user.id;
 
         session = await api('/api/session', {
           access_token,
@@ -1061,13 +1142,13 @@
         $('btnTela').disabled   = false;
         $('btnCamera').disabled = false;
 
-        showEmpty('Ninguém transmitindo', 'Use os botões abaixo para começar.');
-        $('mainDock').hidden = false;
+        $('connectMsg').hidden = true;
+        renderParticipantsGrid();
         updatePeople();
         connectViewer();
       } catch (e) {
         console.error(e);
-        showEmpty('Erro ao conectar', e.message || 'Recarregue a atividade.');
+        $('connectText').textContent = e.message || 'Erro ao conectar. Recarregue.';
       }
     })();
   </script>
