@@ -435,17 +435,24 @@ app.post('/api/start-activity', async (req, res) => {
         let d = '';
         r.on('data', c => d += c);
         r.on('end', () => {
-          try { resolve(JSON.parse(d)); } catch { reject(new Error('Parse error')); }
+          try { resolve({ status: r.statusCode, data: JSON.parse(d) }); }
+          catch { reject(new Error('Parse error')); }
         });
       });
       req2.on('error', reject);
       req2.write(body);
       req2.end();
     });
-    if (invite.error || invite.code === 0) {
-      return res.status(500).json({ error: invite.message || 'Falha ao criar invite' });
+
+    console.log('[start-activity] Discord respondeu:', invite.status, JSON.stringify(invite.data));
+
+    // Resposta de erro do Discord tem statusCode >= 400
+    if (invite.status >= 400) {
+      const msg = invite.data?.message || invite.data?.error || 'Falha ao criar invite';
+      return res.status(500).json({ error: `Discord: ${msg} (código ${invite.data?.code || invite.status})` });
     }
-    res.json({ invite_url: `https://discord.gg/${invite.code}` });
+
+    res.json({ invite_url: `https://discord.gg/${invite.data.code}` });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -609,22 +616,24 @@ const LANDING_HTML = `<!DOCTYPE html>
       background:linear-gradient(180deg,transparent 0%,rgba(10,10,14,.98) 20%);}
     .section-title{font-size:.68rem;font-weight:700;letter-spacing:.12em;
       text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:36px;}
-    .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;max-width:800px;}
-    .step{display:flex;flex-direction:column;gap:12px;padding:22px;
-      background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;}
+    .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;max-width:860px;}
+    .step{display:flex;flex-direction:column;gap:10px;padding:24px 22px;
+      background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;
+      transition:border-color .2s,background .2s;}
+    .step:hover{border-color:rgba(198,40,40,.3);background:rgba(255,255,255,.05);}
     .step-num{font-size:.7rem;font-weight:800;color:#c62828;letter-spacing:.08em;}
-    .step-title{font-size:.9rem;font-weight:700;color:#fff;}
-    .step-desc{font-size:.78rem;color:rgba(255,255,255,.38);line-height:1.55;}
+    .step-title{font-size:.95rem;font-weight:700;color:#fff;}
+    .step-desc{font-size:.82rem;color:rgba(255,255,255,.42);line-height:1.65;}
 
     /* ── Seção Discord ── */
     .discord-section{position:relative;z-index:1;
       padding:0 40px 80px 10%;}
-    .discord-card{display:flex;align-items:center;gap:20px;max-width:560px;
+    .discord-card{display:flex;align-items:flex-start;gap:20px;max-width:680px;
       background:rgba(88,101,242,.1);border:1px solid rgba(88,101,242,.25);
-      border-radius:14px;padding:22px 26px;}
-    .discord-card svg{width:36px;height:36px;fill:#5865f2;flex-shrink:0;}
-    .discord-card-text h3{font-size:.9rem;font-weight:700;color:#fff;margin-bottom:4px;}
-    .discord-card-text p{font-size:.76rem;color:rgba(255,255,255,.38);line-height:1.5;}
+      border-radius:14px;padding:26px 28px;}
+    .discord-card svg{width:42px;height:42px;fill:#5865f2;flex-shrink:0;margin-top:2px;}
+    .discord-card-text h3{font-size:.95rem;font-weight:700;color:#fff;margin-bottom:6px;}
+    .discord-card-text p{font-size:.82rem;color:rgba(255,255,255,.42);line-height:1.65;}
 
     /* Footer */
     .footer{position:relative;z-index:1;padding:20px 40px 28px 10%;
@@ -640,6 +649,16 @@ const LANDING_HTML = `<!DOCTYPE html>
     }
     .modal-trigger:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(198,40,40,.7);}
     .modal-trigger svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+    /* ── Crédito fixo ── */
+    .credit-badge{
+      position:fixed;bottom:24px;left:24px;z-index:50;
+      font-size:.72rem;font-weight:600;color:rgba(255,255,255,.55);
+      background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+      padding:8px 14px;border-radius:999px;backdrop-filter:blur(6px);
+      pointer-events:none;user-select:none;
+    }
+    .credit-badge span{color:#ff5c5c;}
 
     /* ── Modal overlay ── */
     .modal-overlay{
@@ -808,18 +827,33 @@ const LANDING_HTML = `<!DOCTYPE html>
     <div class="steps">
       <div class="step">
         <span class="step-num">01</span>
-        <div class="step-title">Crie a sala</div>
-        <p class="step-desc">Clique em "Criar sala" e receba um link único. Nenhuma conta necessária.</p>
+        <div class="step-title">Conecte sua conta</div>
+        <p class="step-desc">Clique em "Conectar Discord" no canto superior direito. Vamos pegar seu nome e foto automaticamente — sem senha, sem cadastro.</p>
       </div>
       <div class="step">
         <span class="step-num">02</span>
-        <div class="step-title">Compartilhe</div>
-        <p class="step-desc">Envie o link para quem vai transmitir. Ele abre a aba de captura direto no navegador.</p>
+        <div class="step-title">Entre em um canal de voz</div>
+        <p class="step-desc">Entre em qualquer canal de voz do seu servidor no Discord. O bot detecta automaticamente onde você está e exibe o nome do canal.</p>
       </div>
       <div class="step">
         <span class="step-num">03</span>
-        <div class="step-title">Assista ao vivo</div>
-        <p class="step-desc">Quem acessar o link vê a transmissão em tempo real, com áudio e vídeo.</p>
+        <div class="step-title">Inicie a Activity</div>
+        <p class="step-desc">Clique em "Conectar bot" no modal. O bot cria a Activity Next Cup dentro do canal de voz e todos os membros do canal podem entrar.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">04</span>
+        <div class="step-title">Transmita sua tela</div>
+        <p class="step-desc">Dentro da Activity, clique no ícone de tela ou câmera. Uma aba de captura abre no navegador — escolha a janela ou aba que quiser transmitir.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">05</span>
+        <div class="step-title">Todos assistem ao vivo</div>
+        <p class="step-desc">Quem estiver na Activity vê a transmissão em tempo real com áudio. Várias pessoas podem transmitir ao mesmo tempo — cada uma com seu próprio tile.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">06</span>
+        <div class="step-title">Qualidade ajustável</div>
+        <p class="step-desc">Clique no ícone de engrenagem para escolher entre 30, 60, 90 ou 120 fps. Mais fps = mais fluido, mas exige mais upload do transmissor.</p>
       </div>
     </div>
   </section>
@@ -832,12 +866,14 @@ const LANDING_HTML = `<!DOCTYPE html>
       </svg>
       <div class="discord-card-text">
         <h3>Integrado ao Discord</h3>
-        <p>Use dentro do Discord como Activity ou acesse direto pelo navegador. A transmissão aparece para todos na sala.</p>
+        <p>A Activity roda dentro do Discord como um aplicativo nativo no canal de voz. Nenhuma aba externa, nenhum plugin — funciona direto no cliente web ou desktop.</p>
       </div>
     </div>
   </section>
 
   <footer class="footer">Next Cup · Transmissões ao vivo · nextcuptransmissoes.online</footer>
+
+  <div class="credit-badge">Feito por Stark e ixce <span>❤</span></div>
 
   <!-- ═══════════════════ MODAL TUTORIAL ═══════════════════ -->
   <div class="modal-overlay" id="modalOverlay">
@@ -930,17 +966,22 @@ const LANDING_HTML = `<!DOCTYPE html>
     function applyUser(u, tok) {
       discordToken = tok;
       discordUser  = u;
+      if (!u || !u.id) return; // token inválido, ignora
       const av = u.avatar
         ? 'https://cdn.discordapp.com/avatars/'+u.id+'/'+u.avatar+'.png?size=128'
         : 'https://cdn.discordapp.com/embed/avatars/'+((Number(u.discriminator||0))%5)+'.png';
       // Topbar
-      userAv.src = av; userNm.textContent = u.global_name || u.username;
-      btnLogin.style.display = 'none'; userPill.classList.add('visible');
-      // Modal passo 2
+      userAv.src = av;
+      userNm.textContent = u.global_name || u.username;
+      btnLogin.style.display = 'none';
+      userPill.classList.add('visible');
+      // Modal — preenche card e avança para passo 2
       document.getElementById('modalUserAv').src = av;
       document.getElementById('modalUserName').textContent = u.global_name || u.username;
       document.getElementById('step1').hidden = true;
       document.getElementById('step2').hidden = false;
+      // Abre o modal automaticamente se ainda não estiver aberto
+      document.getElementById('modalOverlay').classList.add('open');
       fetchVoiceChannel(u);
     }
 
@@ -1364,4 +1405,3 @@ setInterval(() => {
     } catch {}
   }
 }, 30000);
-
