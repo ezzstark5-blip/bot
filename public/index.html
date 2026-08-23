@@ -275,27 +275,46 @@
       background: #2b2d31; border-radius: 999px;
       padding: 1px 7px; font-size: 0.68rem; color: #949ba4; font-weight: 600;
     }
-    /* Item de participante na sidebar (só avatar grande + nome) */
+    /* ── Card de participante na sidebar (banner + avatar + nome) ── */
     .sb-participant {
-      display: flex; flex-direction: column; align-items: center;
-      gap: 5px; padding: 10px 8px;
-      cursor: default;
+      display: flex; flex-direction: column;
+      overflow: hidden; cursor: default;
+      border-bottom: 1px solid #1e1f22;
     }
-    .sb-participant-avatar {
-      width: 56px; height: 56px; border-radius: 50%;
-      object-fit: cover; border: 2px solid #2b2d31; background: #2b2d31;
+    /* Área do banner/cor — ocupa toda a largura, altura fixa */
+    .sb-p-banner {
+      width: 100%; height: 52px;
+      background: #36393f;          /* fallback: sem banner nem cor */
+      background-size: cover;
+      background-position: center top;
+      flex-shrink: 0;
+      position: relative;
     }
-    .sb-participant-ph {
-      width: 56px; height: 56px; border-radius: 50%;
-      background: #36393f; border: 2px solid #2b2d31;
+    /* Avatar circular sobre o banner, metade dentro / metade fora */
+    .sb-p-avatar-wrap {
+      position: absolute;
+      bottom: -22px; left: 10px;
+      width: 44px; height: 44px;
+    }
+    .sb-p-avatar-wrap img,
+    .sb-p-avatar-wrap .sb-p-avatar-ph {
+      width: 44px; height: 44px; border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #111214;   /* borda da cor do painel para "recortar" */
+      background: #36393f;
+    }
+    .sb-p-avatar-ph {
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.2rem; font-weight: 700; color: #b5bac1;
+      font-size: 1rem; font-weight: 700; color: #b5bac1;
     }
-    .sb-participant-name {
-      font-size: 0.72rem; color: #dcddde;
+    /* Área inferior do card: nome com recuo para não cobrir o avatar */
+    .sb-p-info {
+      padding: 28px 10px 8px 62px;  /* top=28 para dar espaço ao avatar que "sobe" */
+    }
+    .sb-p-name {
+      font-size: 0.78rem; font-weight: 600; color: #f2f3f5;
       display: flex; align-items: center; gap: 4px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      max-width: 100%;
     }
 
     /* Espectadores (modo idle) */
@@ -778,6 +797,17 @@
       for (const p of participants) {
         const tile = document.createElement('div');
         tile.className = 'participant-tile';
+
+        /* Fundo: banner ou accent_color */
+        if (p.banner) {
+          const ext = p.banner.startsWith('a_') ? 'gif' : 'png';
+          tile.style.backgroundImage = `url(https://cdn.discordapp.com/banners/${p.id}/${p.banner}.${ext}?size=480)`;
+          tile.style.backgroundSize = 'cover';
+          tile.style.backgroundPosition = 'center';
+        } else if (p.accentColor != null) {
+          tile.style.background = '#' + p.accentColor.toString(16).padStart(6, '0');
+        }
+
         const avEl = makeAvatar(p, 'participant-avatar', 'participant-avatar-ph', 80);
         const nameEl = document.createElement('div');
         nameEl.className = 'participant-name';
@@ -792,20 +822,60 @@
       const list = $('sbParticipantsList');
       list.innerHTML = '';
       $('sbParticipantsBadge').textContent = participants.length;
+
       for (const p of participants) {
-        const item = document.createElement('div');
-        item.className = 'sb-participant';
-        const avEl = makeAvatar(p, 'sb-participant-avatar', 'sb-participant-ph', 56);
-        const nameEl = document.createElement('div');
-        nameEl.className = 'sb-participant-name';
-        if (p.id === myUserId) {
-          nameEl.innerHTML = `<span class="dot-green"></span>${p.name || 'Você'}`;
-        } else {
-          nameEl.innerHTML = `<span class="dot-green"></span>${p.name || 'Convidado'}`;
+        const card = document.createElement('div');
+        card.className = 'sb-participant';
+
+        /* --- Fundo: banner ou accent_color --- */
+        const banner = document.createElement('div');
+        banner.className = 'sb-p-banner';
+
+        if (p.banner) {
+          // Hash de banner → URL da CDN do Discord
+          const ext = p.banner.startsWith('a_') ? 'gif' : 'png';
+          banner.style.backgroundImage = `url(https://cdn.discordapp.com/banners/${p.id}/${p.banner}.${ext}?size=480)`;
+        } else if (p.accentColor != null) {
+          // accent_color é inteiro; converte para hex
+          banner.style.background = '#' + p.accentColor.toString(16).padStart(6, '0');
         }
-        item.append(avEl, nameEl);
-        list.appendChild(item);
+        // else: mantém o #36393f do CSS
+
+        /* --- Avatar circular sobre o banner --- */
+        const avatarWrap = document.createElement('div');
+        avatarWrap.className = 'sb-p-avatar-wrap';
+
+        if (p.av) {
+          const img = document.createElement('img');
+          img.src = `https://cdn.discordapp.com/avatars/${p.id}/${p.av}.png?size=128`;
+          img.alt = p.name;
+          img.onerror = () => img.replaceWith(makeSbPh(p.name));
+          avatarWrap.appendChild(img);
+        } else {
+          avatarWrap.appendChild(makeSbPh(p.name));
+        }
+
+        banner.appendChild(avatarWrap);
+
+        /* --- Nome --- */
+        const info = document.createElement('div');
+        info.className = 'sb-p-info';
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'sb-p-name';
+        nameEl.innerHTML = `<span class="dot-green"></span>${p.name || 'Convidado'}`;
+        info.appendChild(nameEl);
+
+        card.append(banner, info);
+        list.appendChild(card);
       }
+    }
+
+    function makeSbPh(name) {
+      const el = document.createElement('div');
+      el.className = 'sb-p-avatar-ph';
+      el.textContent = (name || '?').charAt(0).toUpperCase();
+      return el;
     }
 
     // ── sidebar de espectadores (idle) ─────────────────────────────────────
@@ -816,7 +886,13 @@
       for (const p of participants) {
         const item = document.createElement('div');
         item.className = 'viewer-item';
+
+        // Avatar pequeno com cor de accent como borda colorida se não tiver foto
         const avEl = makeAvatar(p, 'viewer-avatar', 'viewer-avatar-ph', 30);
+        if (p.accentColor != null && !p.av) {
+          avEl.style.background = '#' + p.accentColor.toString(16).padStart(6, '0');
+        }
+
         const nameEl = document.createElement('div');
         nameEl.className = 'viewer-name';
         nameEl.textContent = p.name || 'Convidado';
@@ -1079,10 +1155,17 @@
         let msg; try { msg = JSON.parse(e.data); } catch { return; }
         switch (msg.type) {
           case 'state':
-            participants = msg.participants ?? [];
+            // participants só vem quando há mudança real na lista de pessoas.
+            // Se não vier, mantém o que já tinha — evita zerar ao receber
+            // mensagens parciais de estado.
+            if (msg.participants) participants = msg.participants;
             reconcile(msg.streams ?? []);
             renderParticipantsGrid();
             updateSidebar();
+            updatePeople();
+            break;
+          case 'viewers-count':
+            // Apenas atualiza o contador de visualizadores (vem do broadcaster)
             updatePeople();
             break;
           case 'stream-start': addStream(msg); break;
