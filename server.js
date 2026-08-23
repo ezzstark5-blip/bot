@@ -198,9 +198,9 @@ function activeStreams(room) {
 
 function participants(room) {
   const seen = new Map();
-  for (const b of room.broadcasters.values()) seen.set(b.userId, b.name);
-  for (const v of room.viewers.values()) seen.set(v.userId, v.name);
-  return [...seen.entries()].map(([id, name]) => ({ id, name }));
+  for (const b of room.broadcasters.values()) seen.set(b.userId, { name: b.name, av: b.av, banner: b.banner, accentColor: b.accentColor });
+  for (const v of room.viewers.values())      seen.set(v.userId, { name: v.name, av: v.av, banner: v.banner, accentColor: v.accentColor });
+  return [...seen.entries()].map(([id, info]) => ({ id, ...info }));
 }
 
 function sendStateToViewers(room) {
@@ -214,8 +214,9 @@ function sendStateToViewers(room) {
   for (const v of room.viewers) safeSend(v.ws, state);
 }
 
+// Envia contagem de viewers apenas para os broadcasters (não altera participantes)
 function sendViewersCount(room) {
-  const msg = { type: 'state', viewers: room.viewers.size };
+  const msg = { type: 'viewers-count', viewers: room.viewers.size };
   for (const b of room.broadcasters.values()) safeSend(b.ws, msg);
 }
 
@@ -338,19 +339,28 @@ app.post('/api/session', async (req, res) => {
   }
   if (!user || !user.id) return res.status(401).json({ error: 'Token inválido' });
 
-  const name = user.global_name || user.username || 'Convidado';
-  const guild = guild_id ? String(guild_id) : null;
+  const name    = user.global_name || user.username || 'Convidado';
+  const guild   = guild_id   ? String(guild_id)   : null;
   const channel = channel_id ? String(channel_id) : null;
-  const roomId = guild && channel ? `call-${guild}-${channel}` : `user-${user.id}`;
+  const roomId  = guild && channel ? `call-${guild}-${channel}` : `user-${user.id}`;
 
-  const base = { room: roomId, uid: user.id, name, av: user.avatar || '', guild: guild || '', channel: channel || '' };
+  // banner é hash do banner; accent_color é inteiro RGB
+  const banner       = user.banner       || '';
+  const accentColor  = user.accent_color != null ? user.accent_color : null;
+
+  const base = {
+    room: roomId, uid: user.id, name,
+    av: user.avatar || '',
+    banner, accentColor,
+    guild: guild || '', channel: channel || '',
+  };
 
   getRoom(roomId); // garante que a sala exista desde já
 
   res.json({
     roomId,
-    user: { id: user.id, name, av: user.avatar },
-    viewerToken: signToken({ ...base, role: 'viewer' }),
+    user: { id: user.id, name, av: user.avatar, banner, accentColor },
+    viewerToken:      signToken({ ...base, role: 'viewer' }),
     broadcasterToken: signToken({ ...base, role: 'broadcaster' }),
     shareUrl: `${publicOrigin(req)}/share.html`,
   });
@@ -464,6 +474,8 @@ function attachBroadcaster(ws, room, payload, fonte) {
     userId: payload.uid,
     name: payload.name,
     av: payload.av,
+    banner: payload.banner || '',
+    accentColor: payload.accentColor != null ? payload.accentColor : null,
     fonte,
     active: false,
     config: null,
@@ -566,7 +578,7 @@ function attachControl(ws, room) {
 // ------------------------------------------------------------ visualizador
 
 function attachViewer(ws, room, payload) {
-  const v = { ws, userId: payload.uid, name: payload.name };
+  const v = { ws, userId: payload.uid, name: payload.name, av: payload.av, banner: payload.banner || '', accentColor: payload.accentColor != null ? payload.accentColor : null };
   room.viewers.add(v);
   logar(`**${v.name}** entrou na sala \`${room.id}\` (${room.viewers.size} assistindo)`);
 
