@@ -586,13 +586,21 @@ function attachViewer(ws, room, payload) {
   room.viewers.add(v);
   logar(`**${v.name}** entrou na sala \`${room.id}\` (${room.viewers.size} assistindo)`);
 
-  // Ordem importa: cada stream ativa vai com config antes de qualquer quadro.
+  // Manda o estado atual para o novo viewer (inclui ele mesmo na lista)
   const streams = activeStreams(room);
   safeSend(ws, { type: 'state', participants: participants(room), abas: [], room: null, streams });
   for (const s of streams) {
-    if (s.config) safeSend(ws, { type: 'config', slot: s.slot, config: s.config });
+    if (s.config)      safeSend(ws, { type: 'config',       slot: s.slot, config: s.config });
     if (s.audioConfig) safeSend(ws, { type: 'audio-config', slot: s.slot, config: s.audioConfig });
   }
+
+  // Avisa TODOS os outros (viewers + broadcasters) que uma nova pessoa entrou
+  const stateAtualizado = { type: 'state', participants: participants(room), abas: [], room: null, streams };
+  for (const outro of room.viewers) {
+    if (outro !== v) safeSend(outro.ws, stateAtualizado);
+  }
+  for (const b of room.broadcasters.values()) safeSend(b.ws, stateAtualizado);
+
   sendViewersCount(room);
 
   // Pede keyframe aos transmissores ativos: quem acabou de entrar precisa
