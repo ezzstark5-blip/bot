@@ -15,8 +15,9 @@ const app = express();
 // -----------------------------------------------------------------
 const PORT = process.env.PORT || 80;
 
-// Inicia o bot de status (opcional — só roda se BOT_TOKEN estiver definido)
-try { require('./bot'); } catch (e) { console.warn('[bot] Não foi possível iniciar o bot:', e.message); }
+// Inicia o bot de status e logs (opcional — só roda se BOT_TOKEN estiver definido)
+let bot = { logTransmissaoIniciada: () => {}, logTransmissaoEncerrada: () => {}, logSalaCriada: () => {}, logSalaFechada: () => {} };
+try { bot = require('./bot'); } catch (e) { console.warn('[bot] Não foi possível iniciar o bot:', e.message); }
 
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
@@ -158,6 +159,7 @@ function getRoom(roomId) {
       emptyTimer: null,
     };
     rooms.set(roomId, room);
+    bot.logSalaCriada({ roomId });
   }
   clearTimeout(room.emptyTimer);
   room.emptyTimer = null;
@@ -170,7 +172,10 @@ function maybeCloseRoom(room) {
     room.viewers.size === 0 &&
     room.controls.size === 0
   ) {
-    room.emptyTimer = setTimeout(() => rooms.delete(room.id), ROOM_TTL_MS);
+    room.emptyTimer = setTimeout(() => {
+      rooms.delete(room.id);
+      bot.logSalaFechada({ roomId: room.id });
+    }, ROOM_TTL_MS);
   }
 }
 
@@ -492,6 +497,7 @@ function attachBroadcaster(ws, room, payload, fonte) {
       case 'start':
         b.active = true;
         logar(`**${b.name}** começou a transmitir **${b.fonte}** na sala \`${room.id}\` (${horario()})`);
+        bot.logTransmissaoIniciada({ name: b.name, userId: b.userId, av: b.av, fonte: b.fonte, roomId: room.id });
         broadcastStreamStart(room, b);
         sendStateToViewers(room);
         break;
@@ -509,6 +515,7 @@ function attachBroadcaster(ws, room, payload, fonte) {
         if (b.active) {
           b.active = false;
           logar(`**${b.name}** parou de transmitir (${horario()})`);
+          bot.logTransmissaoEncerrada({ name: b.name, userId: b.userId, av: b.av, fonte: b.fonte, roomId: room.id });
           broadcastStreamStop(room, b.slot);
           sendStateToViewers(room);
         }
@@ -532,6 +539,7 @@ function attachBroadcaster(ws, room, payload, fonte) {
     room.broadcasters.delete(b.slot);
     if (b.active) {
       b.active = false;
+      bot.logTransmissaoEncerrada({ name: b.name, userId: b.userId, av: b.av, fonte: b.fonte, roomId: room.id });
       broadcastStreamStop(room, b.slot);
     }
     sendStateToViewers(room);
