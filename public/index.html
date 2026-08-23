@@ -9,7 +9,7 @@
     html, body { height: 100%; overflow: hidden; }
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #000;
+      background: #0a0a0a;
       color: #fff;
       display: flex;
       flex-direction: column;
@@ -20,10 +20,20 @@
       gap: 8px;
       padding: 10px 14px;
       flex-shrink: 0;
+      background: linear-gradient(180deg, #111 0%, #0a0a0a 100%);
+      border-bottom: 1px solid #1a1a1a;
     }
-    body.live .topbar { padding: 4px 10px; }
+    body.live .topbar { padding: 4px 10px; border-bottom-color: #2a1010; }
+    .logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      object-fit: contain;
+    }
+    body.live .logo { width: 22px; height: 22px; }
     .pill {
-      background: #1e1f22;
+      background: #1a1a1a;
+      border: 1px solid #2a1010;
       border-radius: 999px;
       padding: 6px 14px;
       font-size: 0.85rem;
@@ -35,7 +45,8 @@
       align-items: center;
       gap: 8px;
       margin-left: auto;
-      background: #1e1f22;
+      background: #1a1a1a;
+      border: 1px solid #2a1010;
       border-radius: 999px;
       padding: 4px 12px 4px 4px;
       font-size: 0.85rem;
@@ -67,8 +78,14 @@
       aspect-ratio: 16 / 9;
       cursor: pointer;
       min-height: 0;
+      border: 1px solid #1a1a1a;
     }
-    body.live .tile { border-radius: 0; aspect-ratio: auto; height: 100%; }
+    body.live .tile {
+      border-radius: 0;
+      border: none;
+      border-right: 1px solid #1a1010;
+      border-bottom: 1px solid #1a1010;
+    }
     body.live main.grid:has(.tile:nth-child(1):last-child) .tile {
       width: 100%;
       height: 100%;
@@ -80,7 +97,8 @@
       position: absolute;
       left: 8px;
       bottom: 8px;
-      background: rgba(0,0,0,.7);
+      background: rgba(10,10,10,.85);
+      border: 1px solid #2a1010;
       border-radius: 6px;
       padding: 3px 8px;
       font-size: 0.78rem;
@@ -89,18 +107,20 @@
       align-items: center;
     }
     .tile .badge {
-      background: #5865f2;
+      background: #b71c1c;
       border-radius: 4px;
       padding: 1px 5px;
       font-size: 0.68rem;
       text-transform: uppercase;
+      font-weight: 600;
     }
     .live-dot {
       width: 8px; height: 8px; border-radius: 50%;
-      background: #23a55a; display: inline-block;
+      background: #f44336; display: inline-block;
       animation: pulse 1.5s infinite;
+      box-shadow: 0 0 6px #f44336;
     }
-    @keyframes pulse { 50% { opacity: .4; } }
+    @keyframes pulse { 50% { opacity: .4; box-shadow: 0 0 2px #f44336; } }
 
     .empty {
       flex: 1;
@@ -113,13 +133,13 @@
       padding: 20px;
     }
     body.live .empty { display: none; }
-    .empty .icon { font-size: 3rem; }
-    .empty h1 { font-size: 1.2rem; font-weight: 600; }
+    .empty .icon { font-size: 3rem; filter: grayscale(.5); }
+    .empty h1 { font-size: 1.2rem; font-weight: 600; color: #e0e0e0; }
     .muted { color: #949ba4; font-size: 0.9rem; }
     .spinner {
       width: 22px; height: 22px;
-      border: 3px solid #33363c;
-      border-top-color: #5865f2;
+      border: 3px solid #2a1010;
+      border-top-color: #c62828;
       border-radius: 50%;
       animation: spin .8s linear infinite;
     }
@@ -128,6 +148,8 @@
     .bottombar {
       flex-shrink: 0;
       padding: 10px 14px 14px;
+      background: linear-gradient(0deg, #0d0d0d 0%, #0a0a0a 100%);
+      border-top: 1px solid #1a1a1a;
     }
     body.live .bottombar { display: none; }
     .dock {
@@ -141,8 +163,8 @@
       align-items: center;
       gap: 6px;
       padding: 12px 22px;
-      background: #5865f2;
-      border: none;
+      background: #b71c1c;
+      border: 1px solid #c62828;
       border-radius: 12px;
       color: #fff;
       font-size: 0.85rem;
@@ -150,28 +172,136 @@
       cursor: pointer;
       transition: all .15s;
     }
-    .btn:hover { background: #4752c4; transform: scale(1.03); }
-    .btn:disabled { background: #3f4147; cursor: not-allowed; transform: none; }
+    .btn:hover { background: #c62828; border-color: #d32f2f; transform: scale(1.03); box-shadow: 0 0 20px rgba(198,40,40,.3); }
+    .btn:disabled { background: #1a1a1a; border-color: #2a1010; color: #555; cursor: not-allowed; transform: none; box-shadow: none; }
     .btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     .toast {
       position: fixed;
       left: 50%;
       bottom: 96px;
       transform: translateX(-50%);
-      background: #1e1f22;
-      border: 1px solid #3f4147;
+      background: #1a1a1a;
+      border: 1px solid #c62828;
       color: #dbdee1;
       padding: 8px 16px;
       border-radius: 10px;
       font-size: 0.85rem;
       z-index: 50;
+      box-shadow: 0 0 12px rgba(198,40,40,.2);
     }
-    .toast.err { border-color: #da373c; color: #ff9a9e; }
+    .toast.err { border-color: #ff1744; color: #ff8a80; }
+
+    /* --- Modal de qualidade --- */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      backdrop-filter: blur(4px);
+    }
+    .modal-card {
+      background: #111214;
+      border: 1px solid #2a1010;
+      border-radius: 14px;
+      padding: 24px;
+      width: 90%;
+      max-width: 340px;
+    }
+    .modal-card h2 {
+      font-size: 1rem;
+      margin-bottom: 4px;
+      color: #e0e0e0;
+    }
+    .modal-card .sub {
+      font-size: 0.78rem;
+      color: #949ba4;
+      margin-bottom: 16px;
+    }
+    .quality-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .quality-opt {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: #1a1a1a;
+      border: 1px solid #2a1010;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .quality-opt:hover { border-color: #c62828; background: #1e1210; }
+    .quality-opt.active {
+      border-color: #c62828;
+      background: rgba(198,40,40,.15);
+    }
+    .quality-opt .qlabel { font-weight: 600; }
+    .quality-opt .qinfo { font-size: 0.75rem; color: #949ba4; }
+    .quality-opt .qcheck {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 2px solid #555;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .quality-opt.active .qcheck {
+      border-color: #c62828;
+      background: #c62828;
+    }
+    .quality-opt.active .qcheck::after {
+      content: '✓';
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .modal-actions {
+      margin-top: 14px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .modal-actions button {
+      padding: 8px 20px;
+      background: #c62828;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .modal-actions button:hover { background: #d32f2f; }
+
+    .settings-btn {
+      background: none;
+      border: 1px solid #2a1010;
+      border-radius: 8px;
+      padding: 6px;
+      cursor: pointer;
+      color: #b5bac1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s;
+    }
+    .settings-btn:hover { border-color: #c62828; color: #fff; }
+    .settings-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   </style>
 </head>
 <body>
   <div class="topbar">
+    <img class="logo" src="/foto/1321a2929b5943c3cc2be6e3722c2552.png" alt="NEXT">
     <div id="people" class="pill">…</div>
+    <button class="settings-btn" id="settingsBtn" title="Qualidade da transmissão" aria-label="Qualidade">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1z"/></svg>
+    </button>
     <div id="userChip" class="user-chip" hidden>
       <img id="userAvatar" alt="">
       <span id="userName">…</span>
@@ -197,6 +327,38 @@
         <svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
         Câmera
       </button>
+    </div>
+  </div>
+
+  <div id="qualityModal" class="modal" hidden>
+    <div class="modal-card">
+      <h2>Qualidade da transmissão</h2>
+      <p class="sub">Mais FPS = movimento mais fluido, mas exige mais upload.</p>
+      <div class="quality-list" id="qualityList">
+        <button class="quality-opt" data-q="1500000" data-fps="30">
+          <span class="qlabel">Leve</span>
+          <span class="qinfo">30 fps · 1,5 Mb/s</span>
+          <span class="qcheck"></span>
+        </button>
+        <button class="quality-opt active" data-q="2500000" data-fps="30">
+          <span class="qlabel">Equilibrado</span>
+          <span class="qinfo">30 fps · 2,5 Mb/s</span>
+          <span class="qcheck"></span>
+        </button>
+        <button class="quality-opt" data-q="5000000" data-fps="60">
+          <span class="qlabel">Nítido</span>
+          <span class="qinfo">60 fps · 5 Mb/s</span>
+          <span class="qcheck"></span>
+        </button>
+        <button class="quality-opt" data-q="8000000" data-fps="120">
+          <span class="qlabel">Máximo</span>
+          <span class="qinfo">120 fps · 8 Mb/s</span>
+          <span class="qcheck"></span>
+        </button>
+      </div>
+      <div class="modal-actions">
+        <button id="qualityClose">Concluir</button>
+      </div>
     </div>
   </div>
 
@@ -592,9 +754,10 @@
     async function abrirShare(fonte) {
       if (!session) return;
       const url = new URL(session.shareUrl);
+      const q = JSON.parse(localStorage.getItem('nextQuality') || '{"q":"2500000","fps":"30"}');
       url.searchParams.set('t', session.broadcasterToken);
-      url.searchParams.set('q', '2500000');
-      url.searchParams.set('fps', '30');
+      url.searchParams.set('q', q.q);
+      url.searchParams.set('fps', q.fps);
       url.searchParams.set('fonte', fonte);
 
       if (discordSdk?.commands?.openExternalLink) {
@@ -612,6 +775,42 @@
 
     $('btnTela').addEventListener('click', () => abrirShare('tela'));
     $('btnCamera').addEventListener('click', () => abrirShare('camera'));
+
+    // --- Qualidade ---
+    const QUALITIES = [
+      { q: '1500000', fps: '30', label: 'Leve', info: '30 fps · 1,5 Mb/s' },
+      { q: '2500000', fps: '30', label: 'Equilibrado', info: '30 fps · 2,5 Mb/s' },
+      { q: '5000000', fps: '60', label: 'Nítido', info: '60 fps · 5 Mb/s' },
+      { q: '8000000', fps: '120', label: 'Máximo', info: '120 fps · 8 Mb/s' },
+    ];
+    let selectedQuality = JSON.parse(localStorage.getItem('nextQuality') || 'null') || QUALITIES[1];
+
+    function highlightQuality() {
+      document.querySelectorAll('.quality-opt').forEach((el) => {
+        const match = el.dataset.q === selectedQuality.q && el.dataset.fps === selectedQuality.fps;
+        el.classList.toggle('active', match);
+      });
+    }
+    highlightQuality();
+
+    document.querySelectorAll('.quality-opt').forEach((el) => {
+      el.addEventListener('click', () => {
+        selectedQuality = { q: el.dataset.q, fps: el.dataset.fps };
+        localStorage.setItem('nextQuality', JSON.stringify(selectedQuality));
+        highlightQuality();
+      });
+    });
+
+    $('settingsBtn').addEventListener('click', () => {
+      $('qualityModal').hidden = false;
+    });
+    $('qualityClose').addEventListener('click', () => {
+      $('qualityModal').hidden = true;
+      toast(`Qualidade: ${selectedQuality.label} (${selectedQuality.fps} fps)`);
+    });
+    $('qualityModal').addEventListener('click', (e) => {
+      if (e.target === $('qualityModal')) $('qualityModal').hidden = true;
+    });
 
     // Navegador só deixa o áudio tocar depois de um gesto: qualquer clique
     // na página retoma os contextos que nasceram suspensos.
