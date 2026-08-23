@@ -15,379 +15,413 @@
       display: flex;
       flex-direction: column;
     }
+
+    /* ========== TOPBAR ========== */
     .topbar {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 10px 14px;
+      padding: 6px 10px;
       flex-shrink: 0;
-      background: linear-gradient(180deg, #111 0%, #0a0a0a 100%);
+      background: #0f0f0f;
       border-bottom: 1px solid #1a1a1a;
+      z-index: 20;
     }
-    body.live .topbar { padding: 4px 10px; border-bottom-color: #2a1010; }
-    .logo {
-      width: 32px;
-      height: 32px;
-      border-radius: 6px;
-      object-fit: contain;
-    }
-    body.live .logo { width: 22px; height: 22px; }
+    .logo { width: 26px; height: 26px; border-radius: 5px; object-fit: contain; }
     .pill {
       background: #1a1a1a;
       border: 1px solid #2a1010;
       border-radius: 999px;
-      padding: 6px 14px;
-      font-size: 0.85rem;
+      padding: 4px 12px;
+      font-size: 0.78rem;
       color: #b5bac1;
     }
-    body.live .pill { font-size: 0.75rem; padding: 3px 10px; }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
     .user-chip {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-left: auto;
-      background: #1a1a1a;
-      border: 1px solid #2a1010;
-      border-radius: 999px;
-      padding: 4px 12px 4px 4px;
-      font-size: 0.85rem;
+      display: flex; align-items: center; gap: 6px;
+      background: #1a1a1a; border: 1px solid #2a1010;
+      border-radius: 999px; padding: 3px 10px 3px 3px; font-size: 0.78rem;
     }
-    body.live .user-chip { display: none; }
-    .user-chip img { width: 26px; height: 26px; border-radius: 50%; }
+    .user-chip img { width: 22px; height: 22px; border-radius: 50%; }
+    .icon-btn {
+      background: none; border: 1px solid #2a1010; border-radius: 7px;
+      padding: 5px; cursor: pointer; color: #b5bac1;
+      display: flex; align-items: center; justify-content: center; transition: all .15s;
+    }
+    .icon-btn:hover { border-color: #c62828; color: #fff; }
+    .icon-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .icon-btn.muted { color: #ff1744; border-color: #ff1744; }
 
-    main.grid {
-      flex: 1;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 8px;
-      padding: 0 10px 8px;
-      overflow-y: auto;
-      align-content: start;
-      min-height: 0;
-    }
-    body.live main.grid {
-      align-content: stretch;
-      grid-auto-rows: 1fr;
-      gap: 0;
-      padding: 0;
-    }
-    .tile {
+    /* ========== STAGE ========== */
+    .stage { flex: 1; display: flex; min-height: 0; overflow: hidden; }
+
+    /* ---- Área central ---- */
+    .main-area {
+      flex: 1; min-width: 0;
       position: relative;
-      background: #111214;
-      border-radius: 12px;
-      overflow: hidden;
-      aspect-ratio: 16 / 9;
-      cursor: pointer;
-      min-height: 0;
-      border: 1px solid #1a1a1a;
+      background: #000;
+      display: flex; align-items: center; justify-content: center;
     }
-    body.live .tile {
-      border-radius: 0;
-      border: none;
-      border-right: 1px solid #1a1010;
-      border-bottom: 1px solid #1a1010;
-    }
-    body.live main.grid:has(.tile:nth-child(1):last-child) .tile {
-      width: 100%;
-      height: 100%;
-    }
-    .tile.full { grid-column: 1 / -1; aspect-ratio: auto; }
-    .tile canvas { width: 100%; height: 100%; object-fit: contain; display: block; }
-    body.live .tile canvas { object-fit: contain; }
-    .tile .label {
-      position: absolute;
-      left: 8px;
-      bottom: 8px;
-      background: rgba(10,10,10,.85);
-      border: 1px solid #2a1010;
-      border-radius: 6px;
-      padding: 3px 8px;
-      font-size: 0.78rem;
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-    .tile .badge {
-      background: #b71c1c;
-      border-radius: 4px;
-      padding: 1px 5px;
-      font-size: 0.68rem;
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-    .live-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: #f44336; display: inline-block;
-      animation: pulse 1.5s infinite;
-      box-shadow: 0 0 6px #f44336;
-    }
-    @keyframes pulse { 50% { opacity: .4; box-shadow: 0 0 2px #f44336; } }
 
+    /* Estado vazio */
     .empty {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      gap: 8px;
-      padding: 20px;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; text-align: center; gap: 8px;
+      padding: 20px; width: 100%; height: 100%;
     }
-    body.live .empty { display: none; }
-    .empty .icon { margin-bottom: 4px; }
-    .empty h1 { font-size: 1.2rem; font-weight: 600; color: #e0e0e0; }
-    .muted { color: #949ba4; font-size: 0.9rem; }
+    .empty h1 { font-size: 1.1rem; font-weight: 600; color: #e0e0e0; }
+    .muted-text { color: #949ba4; font-size: 0.85rem; }
     .spinner {
-      width: 22px; height: 22px;
-      border: 3px solid #2a1010;
-      border-top-color: #c62828;
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
+      width: 20px; height: 20px;
+      border: 2px solid #2a1010; border-top-color: #c62828;
+      border-radius: 50%; animation: spin .8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .bottombar {
-      flex-shrink: 0;
-      padding: 10px 14px 14px;
-      background: linear-gradient(0deg, #0d0d0d 0%, #0a0a0a 100%);
-      border-top: 1px solid #1a1a1a;
+    /* Tile principal */
+    .main-tile {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: #000;
     }
-    body.live .bottombar { display: none; }
-    .dock {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
+    .main-tile canvas {
+      width: 100%; height: 100%;
+      object-fit: contain; display: block;
     }
-    .btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      padding: 12px 22px;
-      background: #b71c1c;
-      border: 1px solid #c62828;
-      border-radius: 12px;
-      color: #fff;
-      font-size: 0.85rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all .15s;
+    /* Label inferior esquerdo */
+    .stream-label {
+      position: absolute; left: 10px; bottom: 10px;
+      background: rgba(10,10,10,.85); border: 1px solid #2a1010;
+      border-radius: 6px; padding: 3px 8px;
+      font-size: 0.75rem; display: flex; gap: 6px; align-items: center;
+      pointer-events: none;
     }
-    .btn:hover { background: #c62828; border-color: #d32f2f; transform: scale(1.03); box-shadow: 0 0 20px rgba(198,40,40,.3); }
-    .btn:disabled { background: #1a1a1a; border-color: #2a1010; color: #555; cursor: not-allowed; transform: none; box-shadow: none; }
-    .btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .toast {
-      position: fixed;
-      left: 50%;
-      bottom: 96px;
-      transform: translateX(-50%);
-      background: #1a1a1a;
-      border: 1px solid #c62828;
-      color: #dbdee1;
-      padding: 8px 16px;
-      border-radius: 10px;
-      font-size: 0.85rem;
-      z-index: 50;
-      box-shadow: 0 0 12px rgba(198,40,40,.2);
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #f44336; display: inline-block;
+      animation: pulse 1.5s infinite; box-shadow: 0 0 5px #f44336;
     }
-    .toast.err { border-color: #ff1744; color: #ff8a80; }
+    @keyframes pulse { 50% { opacity: .35; box-shadow: 0 0 2px #f44336; } }
+    .badge {
+      background: #b71c1c; border-radius: 3px;
+      padding: 1px 5px; font-size: 0.65rem;
+      text-transform: uppercase; font-weight: 600;
+    }
 
-    /* --- Modal de qualidade --- */
+    /* Botão X do tile principal — visível sempre */
+    .close-main {
+      position: absolute; top: 10px; right: 10px;
+      width: 28px; height: 28px;
+      background: rgba(0,0,0,.72); border: 1px solid #555;
+      border-radius: 6px; color: #fff; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+      transition: all .15s; z-index: 10;
+    }
+    .close-main:hover { background: #c62828; border-color: #c62828; }
+
+    /* Dock de transmissão */
+    .dock { display: flex; gap: 10px; margin-top: 16px; }
+    .btn {
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      padding: 10px 18px; background: #b71c1c; border: 1px solid #c62828;
+      border-radius: 10px; color: #fff; font-size: 0.82rem; font-weight: 500;
+      cursor: pointer; transition: all .15s;
+    }
+    .btn:hover { background: #c62828; border-color: #d32f2f; transform: scale(1.03); box-shadow: 0 0 18px rgba(198,40,40,.3); }
+    .btn:disabled { background: #1a1a1a; border-color: #2a1010; color: #555; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ========== SIDEBAR ========== */
+    .sidebar {
+      width: 200px; flex-shrink: 0;
+      background: #0f0f0f; border-left: 1px solid #1a1a1a;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .sidebar-title {
+      padding: 8px 10px 6px;
+      font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: #6b6f76; border-bottom: 1px solid #1a1a1a; flex-shrink: 0;
+    }
+    .sidebar-section { display: flex; flex-direction: column; min-height: 0; }
+
+    /* Mini-tiles */
+    .side-streams {
+      display: flex; flex-direction: column;
+      overflow-y: auto; flex-shrink: 0;
+    }
+
+    /*
+     * Cada item da sidebar tem:
+     *  - o canvas do stream (sempre renderizando)
+     *  - overlay com "Assistir" no centro
+     *  - overlay de hover com botões ✕ e ⛶ (visível ao passar o mouse)
+     */
+    .side-stream-item {
+      position: relative;
+      border-bottom: 1px solid #161616;
+      background: #111214;
+    }
+    /* Wrap do canvas — aspect-ratio 16:9 */
+    .side-canvas-wrap {
+      position: relative;
+      width: 100%; aspect-ratio: 16 / 9;
+      background: #0a0a0a; overflow: hidden;
+    }
+    .side-canvas-wrap canvas {
+      width: 100%; height: 100%;
+      object-fit: contain; display: block;
+    }
+
+    /* Overlay "Assistir" — sempre visível por cima do canvas */
+    .side-overlay-watch {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none; /* o clique passa pro item pai */
+    }
+    .side-watch-pill {
+      background: #5865f2;
+      border-radius: 999px;
+      padding: 5px 11px;
+      font-size: 0.70rem; font-weight: 600;
+      color: #fff;
+      display: flex; align-items: center; gap: 5px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.5);
+    }
+    .side-watch-pill svg { width: 12px; height: 12px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* Overlay de hover — botões ✕ e ⛶ */
+    .side-overlay-hover {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,.55);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      opacity: 0; transition: opacity .15s;
+      z-index: 5;
+    }
+    .side-stream-item:hover .side-overlay-hover { opacity: 1; }
+
+    .side-action-btn {
+      width: 30px; height: 30px;
+      background: rgba(20,20,20,.9);
+      border: 1px solid #444;
+      border-radius: 7px;
+      color: #fff; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      transition: all .12s;
+    }
+    .side-action-btn:hover { background: #c62828; border-color: #c62828; }
+    .side-action-btn.expand:hover { background: #5865f2; border-color: #5865f2; }
+    .side-action-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* Item em destaque (stream principal): borda vermelha, sem "Assistir" */
+    .side-stream-item.is-focused { outline: 2px solid #c62828; outline-offset: -2px; cursor: default; }
+    .side-stream-item.is-focused .side-overlay-watch { display: none; }
+    /* Itens não-focados têm canvas um pouco escurecido */
+    .side-stream-item:not(.is-focused) .side-canvas-wrap canvas { opacity: 0.45; }
+
+    /* Nome embaixo */
+    .side-stream-name {
+      display: flex; align-items: center; gap: 5px;
+      padding: 4px 8px;
+      font-size: 0.71rem; color: #b5bac1;
+      pointer-events: none;
+    }
+    .dot-green { width: 7px; height: 7px; border-radius: 50%; background: #3ba55d; flex-shrink: 0; }
+
+    /* Divisor */
+    .sidebar-divider { height: 1px; background: #1a1a1a; flex-shrink: 0; }
+
+    /* ---- Espectadores ---- */
+    .viewers-section { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+    .viewers-header {
+      padding: 8px 10px 6px;
+      font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: #6b6f76;
+      display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    }
+    .viewers-count-badge {
+      background: #1a1a1a; border-radius: 999px;
+      padding: 1px 7px; font-size: 0.68rem; color: #949ba4; font-weight: 600;
+    }
+    .viewers-list { flex: 1; overflow-y: auto; padding: 4px 0 8px; }
+    .viewer-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 10px; transition: background .12s;
+    }
+    .viewer-item:hover { background: #161618; }
+    .viewer-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      object-fit: cover; flex-shrink: 0;
+      border: 1px solid #2a2a2a; background: #1a1a1a;
+    }
+    .viewer-avatar-ph {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #1e1f22; border: 1px solid #2a2a2a;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; color: #6b6f76; font-weight: 600; flex-shrink: 0;
+    }
+    .viewer-name {
+      font-size: 0.78rem; color: #dcddde;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Scrollbars finas */
+    .side-streams::-webkit-scrollbar,
+    .viewers-list::-webkit-scrollbar { width: 4px; }
+    .side-streams::-webkit-scrollbar-track,
+    .viewers-list::-webkit-scrollbar-track { background: transparent; }
+    .side-streams::-webkit-scrollbar-thumb,
+    .viewers-list::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
+
+    /* ========== MODAL QUALIDADE ========== */
     .modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      backdrop-filter: blur(4px);
+      position: fixed; inset: 0; background: rgba(0,0,0,.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100; backdrop-filter: blur(4px);
     }
     .modal-card {
-      background: #111214;
-      border: 1px solid #2a1010;
-      border-radius: 14px;
-      padding: 24px;
-      width: 90%;
-      max-width: 340px;
+      background: #111214; border: 1px solid #2a1010;
+      border-radius: 14px; padding: 22px; width: 90%; max-width: 320px;
     }
-    .modal-card h2 {
-      font-size: 1rem;
-      margin-bottom: 4px;
-      color: #e0e0e0;
-    }
-    .modal-card .sub {
-      font-size: 0.78rem;
-      color: #949ba4;
-      margin-bottom: 16px;
-    }
-    .quality-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+    .modal-card h2 { font-size: 0.95rem; margin-bottom: 3px; color: #e0e0e0; }
+    .modal-card .sub { font-size: 0.75rem; color: #949ba4; margin-bottom: 14px; }
+    .quality-list { display: flex; flex-direction: column; gap: 7px; }
     .quality-opt {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 14px;
-      background: #1a1a1a;
-      border: 1px solid #2a1010;
-      border-radius: 10px;
-      color: #fff;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: all .15s;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 12px; background: #1a1a1a; border: 1px solid #2a1010;
+      border-radius: 9px; color: #fff; font-size: 0.82rem; cursor: pointer; transition: all .15s;
     }
     .quality-opt:hover { border-color: #c62828; background: #1e1210; }
-    .quality-opt.active {
-      border-color: #c62828;
-      background: rgba(198,40,40,.15);
-    }
+    .quality-opt.active { border-color: #c62828; background: rgba(198,40,40,.15); }
     .quality-opt .qlabel { font-weight: 600; }
-    .quality-opt .qinfo { font-size: 0.75rem; color: #949ba4; }
+    .quality-opt .qinfo { font-size: 0.72rem; color: #949ba4; }
     .quality-opt .qcheck {
-      width: 18px; height: 18px;
-      border-radius: 50%;
-      border: 2px solid #555;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
+      width: 16px; height: 16px; border-radius: 50%; border: 2px solid #555;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
-    .quality-opt.active .qcheck {
-      border-color: #c62828;
-      background: #c62828;
-    }
+    .quality-opt.active .qcheck { border-color: #c62828; background: #c62828; }
     .quality-opt.active .qcheck::after {
-      content: '';
-      display: block;
-      width: 10px;
-      height: 10px;
+      content: ''; display: block; width: 9px; height: 9px;
       background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") center/contain no-repeat;
     }
-    .modal-actions {
-      margin-top: 14px;
-      display: flex;
-      justify-content: flex-end;
-    }
+    .modal-actions { margin-top: 12px; display: flex; justify-content: flex-end; }
     .modal-actions button {
-      padding: 8px 20px;
-      background: #c62828;
-      border: none;
-      border-radius: 8px;
-      color: #fff;
-      font-size: 0.85rem;
-      font-weight: 500;
-      cursor: pointer;
+      padding: 7px 18px; background: #c62828; border: none;
+      border-radius: 7px; color: #fff; font-size: 0.82rem; font-weight: 500; cursor: pointer;
     }
     .modal-actions button:hover { background: #d32f2f; }
 
-    .settings-btn {
-      background: none;
-      border: 1px solid #2a1010;
-      border-radius: 8px;
-      padding: 6px;
-      cursor: pointer;
-      color: #b5bac1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all .15s;
+    /* ========== TOAST ========== */
+    .toast {
+      position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
+      background: #1a1a1a; border: 1px solid #c62828; color: #dbdee1;
+      padding: 7px 14px; border-radius: 9px; font-size: 0.82rem;
+      z-index: 200; box-shadow: 0 0 10px rgba(198,40,40,.2);
     }
-    .settings-btn:hover { border-color: #c62828; color: #fff; }
-    .settings-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
-    .mute-btn {
-      background: none;
-      border: 1px solid #2a1010;
-      border-radius: 8px;
-      padding: 6px;
-      cursor: pointer;
-      color: #b5bac1;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      transition: all .15s;
-    }
-    body.live .mute-btn { display: flex; }
-    .mute-btn:hover { border-color: #c62828; color: #fff; }
-    .mute-btn.muted { color: #ff1744; border-color: #ff1744; }
-    .mute-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .toast.err { border-color: #ff1744; color: #ff8a80; }
   </style>
 </head>
 <body>
+
+  <!-- TOPBAR -->
   <div class="topbar">
     <img class="logo" src="/foto/1321a2929b5943c3cc2be6e3722c2552.png" alt="NEXT">
     <div id="people" class="pill">…</div>
-    <button class="mute-btn" id="muteBtn" title="Mutear áudio" aria-label="Mutear áudio">
-      <svg id="micOn" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-      <svg id="micOff" viewBox="0 0 24 24" style="display:none"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2c0 .76-.13 1.49-.35 2.17"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-    </button>
-    <button class="settings-btn" id="settingsBtn" title="Qualidade da transmissão" aria-label="Qualidade">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1z"/></svg>
-    </button>
-    <div id="userChip" class="user-chip" hidden>
-      <img id="userAvatar" alt="">
-      <span id="userName">…</span>
-    </div>
-  </div>
-
-  <main id="grid" class="grid" hidden></main>
-
-  <div id="empty" class="empty">
-    <div class="icon">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2" y="3" width="20" height="14" rx="2"/>
-        <path d="M8 21h8"/>
-        <path d="M12 17v4"/>
-      </svg>
-    </div>
-    <h1 id="emptyTitle">Conectando…</h1>
-    <p id="emptyText" class="muted">Autenticando com o Discord</p>
-    <div class="spinner"></div>
-  </div>
-
-  <div class="bottombar">
-    <div class="dock">
-      <button class="btn" id="btnTela" disabled>
-        <svg viewBox="0 0 24 24"><path d="M3 5h18v11H3z"/><path d="M8 20h8"/></svg>
-        Tela
+    <div class="topbar-right">
+      <button class="icon-btn" id="muteBtn" title="Mutear áudio">
+        <svg id="micOn" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        <svg id="micOff" viewBox="0 0 24 24" style="display:none"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2c0 .76-.13 1.49-.35 2.17"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
       </button>
-      <button class="btn" id="btnCamera" disabled>
-        <svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-        Câmera
+      <button class="icon-btn" id="settingsBtn" title="Qualidade">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1z"/></svg>
       </button>
+      <div id="userChip" class="user-chip" hidden>
+        <img id="userAvatar" alt="">
+        <span id="userName">…</span>
+      </div>
     </div>
   </div>
 
+  <!-- STAGE -->
+  <div class="stage">
+
+    <!-- Área central -->
+    <div class="main-area" id="mainArea">
+      <!-- Estado vazio / conectando -->
+      <div id="emptyState" class="empty">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2"/>
+          <path d="M8 21h8"/><path d="M12 17v4"/>
+        </svg>
+        <h1 id="emptyTitle">Conectando…</h1>
+        <p id="emptyText" class="muted-text">Autenticando com o Discord</p>
+        <div class="spinner" id="emptySpinner"></div>
+        <div class="dock" id="mainDock" hidden>
+          <button class="btn" id="btnTela" disabled>
+            <svg viewBox="0 0 24 24"><path d="M3 5h18v11H3z"/><path d="M8 20h8"/></svg>
+            Tela
+          </button>
+          <button class="btn" id="btnCamera" disabled>
+            <svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            Câmera
+          </button>
+        </div>
+      </div>
+
+      <!-- Tile principal -->
+      <div id="mainTile" class="main-tile" hidden>
+        <!-- canvas injetado pelo JS aqui -->
+        <div class="stream-label" id="mainLabel">
+          <span class="live-dot"></span>
+          <span id="mainLabelName">Transmissão</span>
+          <span class="badge" id="mainLabelBadge">tela</span>
+        </div>
+        <button class="close-main" id="closeMain" title="Fechar">✕</button>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+      <!-- Outras transmissões -->
+      <div class="sidebar-section" id="sideStreamsSection" hidden>
+        <div class="sidebar-title" id="sideStreamsTitle">Outra Transmissão</div>
+        <div class="side-streams" id="sideStreamsList"></div>
+      </div>
+
+      <div class="sidebar-divider" id="sidebarDivider" hidden></div>
+
+      <!-- Espectadores -->
+      <div class="viewers-section">
+        <div class="viewers-header">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          Assistindo
+          <span class="viewers-count-badge" id="viewersBadge">0</span>
+        </div>
+        <div class="viewers-list" id="viewersList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL QUALIDADE -->
   <div id="qualityModal" class="modal" hidden>
     <div class="modal-card">
       <h2>Qualidade da transmissão</h2>
       <p class="sub">Mais FPS = movimento mais fluido, mas exige mais upload.</p>
-      <div class="quality-list" id="qualityList">
-        <button class="quality-opt" data-q="1500000" data-fps="30">
-          <span class="qlabel">Leve</span>
-          <span class="qinfo">30 fps · 1,5 Mb/s</span>
-          <span class="qcheck"></span>
-        </button>
-        <button class="quality-opt active" data-q="2500000" data-fps="30">
-          <span class="qlabel">Equilibrado</span>
-          <span class="qinfo">30 fps · 2,5 Mb/s</span>
-          <span class="qcheck"></span>
-        </button>
-        <button class="quality-opt" data-q="5000000" data-fps="60">
-          <span class="qlabel">Nítido</span>
-          <span class="qinfo">60 fps · 5 Mb/s</span>
-          <span class="qcheck"></span>
-        </button>
-        <button class="quality-opt" data-q="8000000" data-fps="120">
-          <span class="qlabel">Máximo</span>
-          <span class="qinfo">120 fps · 8 Mb/s</span>
-          <span class="qcheck"></span>
-        </button>
+      <div class="quality-list">
+        <button class="quality-opt" data-q="1500000" data-fps="30"><span class="qlabel">Leve</span><span class="qinfo">30 fps · 1,5 Mb/s</span><span class="qcheck"></span></button>
+        <button class="quality-opt active" data-q="2500000" data-fps="30"><span class="qlabel">Equilibrado</span><span class="qinfo">30 fps · 2,5 Mb/s</span><span class="qcheck"></span></button>
+        <button class="quality-opt" data-q="5000000" data-fps="60"><span class="qlabel">Nítido</span><span class="qinfo">60 fps · 5 Mb/s</span><span class="qcheck"></span></button>
+        <button class="quality-opt" data-q="8000000" data-fps="120"><span class="qlabel">Máximo</span><span class="qinfo">120 fps · 8 Mb/s</span><span class="qcheck"></span></button>
       </div>
-      <div class="modal-actions">
-        <button id="qualityClose">Concluir</button>
-      </div>
+      <div class="modal-actions"><button id="qualityClose">Concluir</button></div>
     </div>
   </div>
 
@@ -397,20 +431,20 @@
     import { DiscordSDK } from 'https://esm.sh/@discord/embedded-app-sdk';
 
     const CLIENT_ID = '1540951591685853305';
-
-    // Dentro do iframe do Discord a URL tem frame_id e todo tráfego passa
-    // pelo proxy "/.proxy". Fora dele (teste direto no navegador), sem prefixo.
     const BASE = new URLSearchParams(location.search).has('frame_id') ? '/.proxy' : '';
-
     const $ = (id) => document.getElementById(id);
 
     let discordSdk = null;
-    let session = null;   // resposta de /api/session
-    let ws = null;
-    let backoff = 1000;
+    let session   = null;
+    let ws        = null;
+    let backoff   = 1000;
 
-    const players = new Map(); // slot -> StreamPlayer
+    const players = new Map();   // slot → StreamPlayer
+    let focusedSlot = null;      // slot em destaque no centro
+    let participants = [];
+    let audioMuted = localStorage.getItem('nextMuted') === 'true';
 
+    // ── toast ──────────────────────────────────────────────────────────────
     function toast(msg, err = false) {
       const el = $('toast');
       el.textContent = msg;
@@ -420,140 +454,162 @@
       toast._t = setTimeout(() => (el.hidden = true), 4000);
     }
 
-    async function api(pathName, body) {
+    // ── api ────────────────────────────────────────────────────────────────
+    async function api(path, body) {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 15000);
       try {
-        const res = await fetch(BASE + pathName, {
+        const res = await fetch(BASE + path, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
           signal: ctrl.signal,
         });
         const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(json.error || json.message || ('HTTP ' + res.status));
+        if (!res.ok) throw new Error(json.error || json.message || 'HTTP ' + res.status);
         return json;
-      } finally {
-        clearTimeout(t);
-      }
+      } finally { clearTimeout(t); }
     }
 
-    // ---------------------------------------------------------- decodificação
-
+    // ── helpers de decodificação ───────────────────────────────────────────
     function b64ToU8(b64) {
-      const bin = atob(b64);
-      const out = new Uint8Array(bin.length);
+      const bin = atob(b64), out = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
       return out;
     }
-
-    // Pede keyframe ao transmissor via relay: usado quando o decoder é
-    // recriado no meio do ar, para não esperar o ciclo periódico de 3s.
     function pedirKeyframe() {
-      try {
-        if (ws && ws.readyState === 1) {
-          ws.send(JSON.stringify({ type: 'need-keyframe' }));
-        }
-      } catch {}
+      try { if (ws?.readyState === 1) ws.send(JSON.stringify({ type: 'need-keyframe' })); } catch {}
     }
 
-    /**
-     * Um stream da sala: recebe os pacotes binários do relay
-     * ([slot][tipo][ts f64][clock f64][payload]) e desenha vídeo (canvas,
-     * via VideoDecoder/WebCodecs) e som (AudioDecoder + WebAudio).
-     */
+    // ── StreamPlayer ───────────────────────────────────────────────────────
     class StreamPlayer {
       constructor(info) {
-        this.slot = info.slot;
-        this.info = info;
-        this.config = info.config || null;
+        this.slot      = info.slot;
+        this.info      = info;
+        this.config    = info.config    || null;
         this.audioConfig = info.audioConfig || null;
 
-        this.tile = document.createElement('div');
-        this.tile.className = 'tile';
-        this.tile.addEventListener('click', () => this.tile.classList.toggle('full'));
+        // Um único canvas por player — usado tanto no side tile quanto no centro.
+        // Quando o player está em destaque, inserimos o canvas no mainTile.
+        // Quando está na sidebar, fica no sideCanvas (mas é o mesmo elemento).
         this.canvas = document.createElement('canvas');
-        this.ctx = this.canvas.getContext('2d', { alpha: false });
-        this.label = document.createElement('div');
-        this.label.className = 'label';
-        this.label.innerHTML =
-          '<span class="live-dot"></span><span></span><span class="badge"></span>';
-        this.label.children[1].textContent = info.name || 'Transmissão';
-        this.label.children[2].textContent = info.fonte === 'camera' ? 'cam' : 'tela';
-        this.tile.append(this.canvas, this.label);
+        this.ctx    = this.canvas.getContext('2d', { alpha: false });
 
-        this.decoder = null;
+        this.decoder   = null;
         this.waitingKey = true;
-        this.pending = [];
+        this.pending   = [];
 
         this.audioDecoder = null;
-        this.audioCtx = null;
-        this.nextAudioAt = 0;
+        this.audioCtx     = null;
+        this.nextAudioAt  = 0;
+
+        this._buildSideItem(info);
+      }
+
+      // Constrói o item da sidebar
+      _buildSideItem(info) {
+        this.sideItem = document.createElement('div');
+        this.sideItem.className = 'side-stream-item';
+        this.sideItem.dataset.slot = this.slot;
+
+        // Wrap do canvas
+        this.canvasWrap = document.createElement('div');
+        this.canvasWrap.className = 'side-canvas-wrap';
+        this.canvasWrap.appendChild(this.canvas);
+
+        // Overlay "Assistir" (sempre visível quando não está em destaque)
+        const watchOverlay = document.createElement('div');
+        watchOverlay.className = 'side-overlay-watch';
+        watchOverlay.innerHTML = `
+          <div class="side-watch-pill">
+            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+            Assistir tela
+          </div>`;
+        this.canvasWrap.appendChild(watchOverlay);
+
+        // Overlay de hover — botões ✕ e ⛶
+        const hoverOverlay = document.createElement('div');
+        hoverOverlay.className = 'side-overlay-hover';
+
+        // Botão ✕ — remove da sidebar (não destrói o player, só desfoca/fecha)
+        const btnClose = document.createElement('button');
+        btnClose.className = 'side-action-btn';
+        btnClose.title = 'Fechar';
+        btnClose.innerHTML = '✕';
+        btnClose.addEventListener('click', (e) => {
+          e.stopPropagation();
+          closeStream(this.slot);
+        });
+
+        // Botão ⛶ — coloca no centro
+        const btnExpand = document.createElement('button');
+        btnExpand.className = 'side-action-btn expand';
+        btnExpand.title = 'Colocar no centro';
+        btnExpand.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>`;
+        btnExpand.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setFocus(this.slot);
+        });
+
+        hoverOverlay.append(btnClose, btnExpand);
+        this.canvasWrap.appendChild(hoverOverlay);
+
+        // Nome
+        const nameRow = document.createElement('div');
+        nameRow.className = 'side-stream-name';
+        nameRow.innerHTML = `<span class="dot-green"></span><span>${info.name || 'Transmissão'}</span>`;
+
+        this.sideItem.append(this.canvasWrap, nameRow);
+
+        // Clicar no item (fora dos botões de hover) → colocar no centro
+        this.sideItem.addEventListener('click', () => setFocus(this.slot));
       }
 
       setVideoConfig(config) {
-        const mudou =
-          !this.config ||
-          this.config.width !== config.width ||
+        const mudou = !this.config ||
+          this.config.width  !== config.width  ||
           this.config.height !== config.height ||
-          this.config.codec !== config.codec;
+          this.config.codec  !== config.codec;
         this.config = config;
-        if (!mudou) {
-          this.flushPending();
-          return;
-        }
-        // O encoder reconfigurou (resolução nova): o decoder antigo não serve
-        // mais — decodificar com o tamanho errado é o que corta a imagem.
-        // Recria e pede keyframe para recomeçar do ponto certo.
+        if (!mudou) { this.flushPending(); return; }
         if (this.decoder) {
           try { this.decoder.close(); } catch {}
-          this.decoder = null;
-          this.waitingKey = true;
-          this.pending.length = 0;
+          this.decoder = null; this.waitingKey = true; this.pending.length = 0;
           pedirKeyframe();
         }
         this.ensureDecoder();
       }
 
-      setAudioConfig(config) {
-        this.audioConfig = config;
-      }
+      setAudioConfig(config) { this.audioConfig = config; }
 
       ensureDecoder() {
         if (this.decoder || !this.config || !window.VideoDecoder) return;
         const cfg = { ...this.config };
-        if (cfg.description && typeof cfg.description === 'string') {
-          cfg.description = b64ToU8(cfg.description);
-        }
+        if (cfg.description && typeof cfg.description === 'string') cfg.description = b64ToU8(cfg.description);
         cfg.optimizeForLatency = true;
         try {
           this.decoder = new VideoDecoder({
             output: (frame) => this.draw(frame),
             error: () => {
-              // Caiu (ex.: perdeu referência): espera um novo keyframe.
               try { this.decoder.close(); } catch {}
-              this.decoder = null;
-              this.waitingKey = true;
+              this.decoder = null; this.waitingKey = true;
             },
           });
           this.decoder.configure(cfg);
-        } catch {
-          this.decoder = null;
-        }
+        } catch { this.decoder = null; }
       }
 
       flushPending() {
         this.ensureDecoder();
-        const list = this.pending;
-        this.pending = [];
-        for (const chunk of list) this.feed(chunk);
+        const list = this.pending; this.pending = [];
+        for (const c of list) this.feed(c);
       }
 
       pushBinary(buffer) {
         const dv = new DataView(buffer);
         const tipo = dv.getUint8(1);
         if (tipo === 3) return this.pushAudio(buffer);
-        const ts = dv.getFloat64(2);
+        const ts   = dv.getFloat64(2);
         const data = new Uint8Array(buffer, 18);
         const chunk = new EncodedVideoChunk({
           type: tipo === 1 ? 'key' : 'delta',
@@ -561,30 +617,24 @@
           data,
         });
         if (!this.decoder && this.pending.length < 120) {
-          this.pending.push(chunk);
-          this.flushPending();
-          return;
+          this.pending.push(chunk); this.flushPending(); return;
         }
         this.feed(chunk);
       }
 
       feed(chunk) {
         if (chunk.type === 'key') this.waitingKey = false;
-        if (this.waitingKey) return; // sem ponto de partida, delta não serve
+        if (this.waitingKey) return;
         if (!this.decoder || this.decoder.state !== 'configured') return;
-        try {
-          this.decoder.decode(chunk);
-        } catch {}
+        try { this.decoder.decode(chunk); } catch {}
       }
 
       draw(frame) {
-        if (frame.displayWidth && (this.canvas.width !== frame.displayWidth || this.canvas.height !== frame.displayHeight)) {
-          this.canvas.width = frame.displayWidth;
-          this.canvas.height = frame.displayHeight;
+        const w = frame.displayWidth, h = frame.displayHeight;
+        if (w && (this.canvas.width !== w || this.canvas.height !== h)) {
+          this.canvas.width = w; this.canvas.height = h;
         }
-        try {
-          this.ctx.drawImage(frame, 0, 0, this.canvas.width, this.canvas.height);
-        } catch {}
+        try { this.ctx.drawImage(frame, 0, 0, this.canvas.width, this.canvas.height); } catch {}
         frame.close();
       }
 
@@ -602,40 +652,30 @@
             sampleRate: this.audioConfig.sampleRate || 48000,
             numberOfChannels: this.audioConfig.numberOfChannels || 2,
           });
-        } catch {
-          this.audioCtx = null;
-          this.audioDecoder = null;
-        }
+        } catch { this.audioCtx = null; this.audioDecoder = null; }
         return this.audioCtx;
       }
 
       pushAudio(buffer) {
         if (!window.AudioDecoder) return;
-        const ctx = this.ensureAudio();
-        if (!ctx) return;
+        const ctx = this.ensureAudio(); if (!ctx) return;
         if (!audioMuted && ctx.state === 'suspended') ctx.resume().catch(() => {});
-
         const dv = new DataView(buffer);
-        const ts = dv.getFloat64(2);
+        const ts   = dv.getFloat64(2);
         const data = new Uint8Array(buffer, 18);
         if (!this.audioDecoder || this.audioDecoder.state !== 'configured') return;
         try {
-          this.audioDecoder.decode(
-            new EncodedAudioChunk({
-              type: 'key',
-              timestamp: Number.isFinite(ts) ? ts : performance.now() * 1000,
-              data,
-            }),
-          );
+          this.audioDecoder.decode(new EncodedAudioChunk({
+            type: 'key',
+            timestamp: Number.isFinite(ts) ? ts : performance.now() * 1000,
+            data,
+          }));
         } catch {}
       }
 
       play(audioData) {
         const ctx = this.audioCtx;
-        if (!ctx || ctx.state !== 'running') {
-          audioData.close();
-          return;
-        }
+        if (!ctx || ctx.state !== 'running') { audioData.close(); return; }
         const frames = audioData.numberOfFrames;
         const channels = Math.min(2, audioData.numberOfChannels);
         const buf = ctx.createBuffer(channels, frames, audioData.sampleRate);
@@ -645,86 +685,232 @@
           buf.copyToChannel(plane, c);
         }
         audioData.close();
-
         const src = ctx.createBufferSource();
-        src.buffer = buf;
-        src.connect(ctx.destination);
+        src.buffer = buf; src.connect(ctx.destination);
         const at = Math.max(ctx.currentTime + 0.05, this.nextAudioAt);
         src.start(at);
         this.nextAudioAt = at + buf.duration;
       }
 
       destroy() {
-        try { this.decoder?.close(); } catch {}
+        try { this.decoder?.close();      } catch {}
         try { this.audioDecoder?.close(); } catch {}
-        this.audioCtx?.close().catch?.(() => {});
-        this.tile.remove();
+        this.audioCtx?.close().catch(() => {});
+        this.sideItem.remove();
       }
     }
 
+    // ── foco ───────────────────────────────────────────────────────────────
+    /**
+     * Coloca um stream no centro.
+     * O canvas do player é movido para dentro do #mainTile.
+     * Na sidebar, o mesmo canvas ainda fica no sideItem como thumbnail —
+     * mas só quando não está em destaque (via CSS .is-focused o canvas
+     * aparece no canvasWrap, escurecido, enquanto no main aparece em full).
+     *
+     * Tecnicamente usamos UM canvas e o movemos entre os dois contêineres.
+     * Quando está no mainTile, o sideCanvasWrap fica vazio (é esperado —
+     * usamos um canvas placeholder para manter o aspect-ratio da sidebar).
+     */
+    function setFocus(slot) {
+      const prev = focusedSlot;
+      focusedSlot = slot;
+
+      // Devolve o canvas do player anterior para a sidebar
+      if (prev != null && prev !== slot) {
+        const pp = players.get(prev);
+        if (pp) {
+          pp.canvasWrap.insertBefore(pp.canvas, pp.canvasWrap.firstChild);
+          pp.sideItem.classList.remove('is-focused');
+        }
+      }
+
+      // Atualiza marcações
+      for (const [s, p] of players) {
+        p.sideItem.classList.toggle('is-focused', s === slot);
+      }
+
+      const p = players.get(slot);
+      if (p) {
+        // Move o canvas para o mainTile (antes do label)
+        const label = $('mainLabel');
+        $('mainTile').insertBefore(p.canvas, label);
+        p.canvas.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;position:absolute;inset:0;';
+
+        $('mainLabelName').textContent = p.info.name || 'Transmissão';
+        $('mainLabelBadge').textContent = p.info.fonte === 'camera' ? 'cam' : 'tela';
+        $('mainTile').hidden  = false;
+        $('emptyState').hidden = true;
+      } else {
+        $('mainTile').hidden   = true;
+        $('emptyState').hidden = false;
+        $('emptySpinner').hidden = true;
+        if (players.size > 0) {
+          $('emptyTitle').textContent = 'Selecione uma transmissão';
+          $('emptyText').textContent  = 'Clique em uma transmissão ao lado.';
+        } else {
+          $('emptyTitle').textContent = 'Ninguém transmitindo';
+          $('emptyText').textContent  = 'Use os botões abaixo para começar.';
+        }
+        $('mainDock').hidden = false;
+      }
+
+      updateSidebarSection();
+      updatePeople();
+    }
+
+    /**
+     * Fecha (destrói) um stream da sidebar via botão ✕.
+     * Se era o focado, passa o foco para o próximo disponível.
+     */
+    function closeStream(slot) {
+      const p = players.get(slot);
+      if (!p) return;
+
+      // Se estava em destaque, devolve o canvas antes de destruir
+      if (focusedSlot === slot) {
+        $('mainTile').hidden = true;
+        focusedSlot = null;
+      }
+
+      p.destroy();
+      players.delete(slot);
+
+      // Tenta focar no próximo
+      const next = players.size > 0 ? players.keys().next().value : null;
+      setFocus(next);
+    }
+
+    function updateSidebarSection() {
+      const hasSide = players.size > 0;
+      $('sideStreamsSection').hidden = !hasSide;
+      $('sidebarDivider').hidden     = !hasSide;
+
+      // Título dinâmico
+      const others = players.size - (focusedSlot != null ? 1 : 0);
+      $('sideStreamsTitle').textContent = others > 1
+        ? 'Outras Transmissões'
+        : 'Outra Transmissão';
+    }
+
+    // ── add / remove ────────────────────────────────────────────────────────
     function addStream(info) {
       if (players.has(info.slot)) return players.get(info.slot);
       const p = new StreamPlayer(info);
       players.set(info.slot, p);
-      $('grid').append(p.tile);
-      $('empty').hidden = true;
-      $('grid').hidden = false;
+      $('sideStreamsList').appendChild(p.sideItem);
+
+      // Primeiro stream → vai direto para o centro
+      if (focusedSlot == null) setFocus(info.slot);
+      else updateSidebarSection();
+
+      updatePeople();
       return p;
     }
 
     function removeStream(slot) {
       const p = players.get(slot);
       if (!p) return;
+      if (focusedSlot === slot) focusedSlot = null;
       p.destroy();
       players.delete(slot);
-      if (!players.size) {
-        $('grid').hidden = true;
-        showEmpty('Ninguém transmitindo', 'Use os botões abaixo para começar.');
-      }
+      const next = players.size > 0 ? players.keys().next().value : null;
+      setFocus(next);
     }
 
     function reconcile(streams) {
-      const alive = new Set(streams.map((s) => s.slot));
+      const alive = new Set(streams.map(s => s.slot));
       for (const slot of [...players.keys()]) if (!alive.has(slot)) removeStream(slot);
       for (const s of streams) addStream(s);
       updatePeople();
     }
 
+    // ── UI ─────────────────────────────────────────────────────────────────
     function updatePeople() {
-      const n = session ? participantsCount() : 0;
-      const aoVivo = players.size > 0;
-      document.body.classList.toggle('live', aoVivo);
-      $('people').textContent = aoVivo
+      const n = participants.length;
+      $('people').textContent = players.size > 0
         ? `${players.size} transmitindo · ${n} na sala`
         : `${n} na sala`;
+      $('viewersBadge').textContent = n;
     }
 
-    let participants = [];
-    const participantsCount = () => participants.length;
+    function renderViewers() {
+      const list = $('viewersList');
+      list.innerHTML = '';
+      for (const p of participants) {
+        const item = document.createElement('div');
+        item.className = 'viewer-item';
+
+        let avEl;
+        if (p.av) {
+          avEl = document.createElement('img');
+          avEl.className = 'viewer-avatar';
+          avEl.src = `https://cdn.discordapp.com/avatars/${p.id}/${p.av}.png?size=64`;
+          avEl.alt = p.name;
+          avEl.onerror = () => avEl.replaceWith(placeholder(p.name));
+        } else {
+          avEl = placeholder(p.name);
+        }
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'viewer-name';
+        nameEl.textContent = p.name || 'Convidado';
+
+        item.append(avEl, nameEl);
+        list.appendChild(item);
+      }
+    }
+
+    function placeholder(name) {
+      const el = document.createElement('div');
+      el.className = 'viewer-avatar-ph';
+      el.textContent = (name || '?').charAt(0).toUpperCase();
+      return el;
+    }
 
     function showEmpty(title, text) {
       $('emptyTitle').textContent = title;
-      $('emptyText').textContent = text;
-      $('empty').hidden = false;
-      $('empty').querySelector('.spinner')?.remove();
+      $('emptyText').textContent  = text;
+      $('emptyState').hidden = false;
+      $('emptySpinner').hidden = true;
+      $('mainTile').hidden = true;
     }
 
-    // ------------------------------------------------------------------ ws
+    // ── botão ✕ do main tile ────────────────────────────────────────────────
+    $('closeMain').addEventListener('click', () => {
+      if (focusedSlot == null) return;
 
+      // Devolve o canvas para a sidebar
+      const p = players.get(focusedSlot);
+      if (p) {
+        p.canvasWrap.insertBefore(p.canvas, p.canvasWrap.firstChild);
+        p.canvas.style.cssText = '';
+        p.sideItem.classList.remove('is-focused');
+      }
+      focusedSlot = null;
+      $('mainTile').hidden = true;
+
+      if (players.size > 0) {
+        showEmpty('Selecione uma transmissão', 'Clique em uma transmissão ao lado.');
+        $('mainDock').hidden = false;
+      } else {
+        showEmpty('Ninguém transmitindo', 'Use os botões abaixo para começar.');
+        $('mainDock').hidden = false;
+      }
+
+      updateSidebarSection();
+      updatePeople();
+    });
+
+    // ── WebSocket ──────────────────────────────────────────────────────────
     function connectViewer() {
       if (!session) return;
       const proto = location.protocol === 'https:' ? 'wss' : 'ws';
       ws = new WebSocket(`${proto}://${location.host}${BASE}/ws?t=${encodeURIComponent(session.viewerToken)}`);
       ws.binaryType = 'arraybuffer';
-
       let openedOnce = false;
 
-      ws.addEventListener('open', () => {
-        openedOnce = true;
-        backoff = 1000;
-        if (!players.size) showEmpty('Ninguém transmitindo', 'Use os botões abaixo para começar.');
-        updatePeople();
-      });
+      ws.addEventListener('open', () => { openedOnce = true; backoff = 1000; updatePeople(); });
 
       ws.addEventListener('message', (e) => {
         if (typeof e.data !== 'string') {
@@ -732,21 +918,16 @@
           players.get(slot)?.pushBinary(e.data);
           return;
         }
-        let msg;
-        try { msg = JSON.parse(e.data); } catch { return; }
+        let msg; try { msg = JSON.parse(e.data); } catch { return; }
 
         switch (msg.type) {
           case 'state':
             participants = msg.participants ?? [];
             reconcile(msg.streams ?? []);
+            renderViewers();
             break;
-          case 'stream-start':
-            addStream(msg);
-            updatePeople();
-            break;
-          case 'stream-stop':
-            removeStream(msg.slot);
-            break;
+          case 'stream-start': addStream(msg); break;
+          case 'stream-stop':  removeStream(msg.slot); break;
           case 'config': {
             const p = players.get(msg.slot);
             if (p) p.setVideoConfig(msg.config);
@@ -757,21 +938,17 @@
             if (p) p.setAudioConfig(msg.config);
             break;
           }
-          case 'room-gone':
-            toast('A sala foi fechada.', true);
-            break;
-          case 'error':
-            toast(msg.message || 'Erro na sala.', true);
-            break;
+          case 'room-gone': toast('A sala foi fechada.', true); break;
+          case 'error':     toast(msg.message || 'Erro na sala.', true); break;
         }
       });
 
       ws.addEventListener('close', () => {
         for (const p of players.values()) p.destroy();
-        players.clear();
+        players.clear(); focusedSlot = null;
         if (!session) return;
         if (!openedOnce) showEmpty('Falhou', 'Não foi possível conectar à sala.');
-        else showEmpty('Reconectando…', 'A conexão com a sala caiu.');
+        else             showEmpty('Reconectando…', 'A conexão com a sala caiu.');
         setTimeout(connectViewer, backoff);
         backoff = Math.min(backoff * 2, 15000);
       });
@@ -779,111 +956,89 @@
       ws.addEventListener('error', () => ws.close());
     }
 
-    // ------------------------------------------------------------ arranque
-
+    // ── abrir share ────────────────────────────────────────────────────────
     async function abrirShare(fonte) {
       if (!session) return;
       const url = new URL(session.shareUrl);
       const q = JSON.parse(localStorage.getItem('nextQuality') || '{"q":"2500000","fps":"30"}');
-      url.searchParams.set('t', session.broadcasterToken);
-      url.searchParams.set('q', q.q);
-      url.searchParams.set('fps', q.fps);
+      url.searchParams.set('t',     session.broadcasterToken);
+      url.searchParams.set('q',     q.q);
+      url.searchParams.set('fps',   q.fps);
       url.searchParams.set('fonte', fonte);
 
       if (discordSdk?.commands?.openExternalLink) {
         try {
           const r = await discordSdk.commands.openExternalLink({ url: url.toString() });
-          if (r && r.opened === false) toast('Você recusou abrir o link.', true);
+          if (r?.opened === false) toast('Você recusou abrir o link.', true);
           return;
-        } catch (err) {
-          toast('Não foi possível abrir o link: ' + err.message, true);
-          return;
-        }
+        } catch (err) { toast('Não foi possível abrir o link: ' + err.message, true); return; }
       }
       window.open(url.toString(), '_blank');
     }
 
-    $('btnTela').addEventListener('click', () => abrirShare('tela'));
+    $('btnTela').addEventListener('click',   () => abrirShare('tela'));
     $('btnCamera').addEventListener('click', () => abrirShare('camera'));
 
-    // --- Mute ---
-    let audioMuted = localStorage.getItem('nextMuted') === 'true';
-
+    // ── mute ────────────────────────────────────────────────────────────────
     function applyMute() {
       for (const p of players.values()) {
         if (p.audioCtx) {
           if (audioMuted) p.audioCtx.suspend().catch(() => {});
-          else p.audioCtx.resume().catch(() => {});
+          else            p.audioCtx.resume().catch(() => {});
         }
       }
-      $('micOn').style.display = audioMuted ? 'none' : '';
+      $('micOn').style.display  = audioMuted ? 'none' : '';
       $('micOff').style.display = audioMuted ? '' : 'none';
       $('muteBtn').classList.toggle('muted', audioMuted);
       $('muteBtn').title = audioMuted ? 'Desmutear áudio' : 'Mutear áudio';
     }
     applyMute();
-
     $('muteBtn').addEventListener('click', () => {
       audioMuted = !audioMuted;
       localStorage.setItem('nextMuted', audioMuted);
       applyMute();
     });
 
-    // --- Qualidade ---
-    const QUALITIES = [
-      { q: '1500000', fps: '30', label: 'Leve', info: '30 fps · 1,5 Mb/s' },
-      { q: '2500000', fps: '30', label: 'Equilibrado', info: '30 fps · 2,5 Mb/s' },
-      { q: '5000000', fps: '60', label: 'Nítido', info: '60 fps · 5 Mb/s' },
-      { q: '8000000', fps: '120', label: 'Máximo', info: '120 fps · 8 Mb/s' },
-    ];
-    let selectedQuality = JSON.parse(localStorage.getItem('nextQuality') || 'null') || QUALITIES[1];
+    // Retoma áudio no primeiro clique
+    document.addEventListener('click', () => {
+      if (!audioMuted) for (const p of players.values()) p.audioCtx?.resume?.().catch(() => {});
+    }, { capture: true });
+
+    // ── qualidade ───────────────────────────────────────────────────────────
+    let selectedQuality = JSON.parse(localStorage.getItem('nextQuality') || 'null') || { q: '2500000', fps: '30' };
 
     function highlightQuality() {
-      document.querySelectorAll('.quality-opt').forEach((el) => {
-        const match = el.dataset.q === selectedQuality.q && el.dataset.fps === selectedQuality.fps;
-        el.classList.toggle('active', match);
-      });
+      document.querySelectorAll('.quality-opt').forEach(el =>
+        el.classList.toggle('active', el.dataset.q === selectedQuality.q && el.dataset.fps === selectedQuality.fps)
+      );
     }
     highlightQuality();
 
-    document.querySelectorAll('.quality-opt').forEach((el) => {
+    document.querySelectorAll('.quality-opt').forEach(el => {
       el.addEventListener('click', () => {
         selectedQuality = { q: el.dataset.q, fps: el.dataset.fps };
         localStorage.setItem('nextQuality', JSON.stringify(selectedQuality));
         highlightQuality();
       });
     });
-
-    $('settingsBtn').addEventListener('click', () => {
-      $('qualityModal').hidden = false;
-    });
+    $('settingsBtn').addEventListener('click', () => { $('qualityModal').hidden = false; });
     $('qualityClose').addEventListener('click', () => {
       $('qualityModal').hidden = true;
-      toast(`Qualidade: ${selectedQuality.label} (${selectedQuality.fps} fps)`);
+      toast(`Qualidade: ${selectedQuality.fps} fps`);
     });
-    $('qualityModal').addEventListener('click', (e) => {
+    $('qualityModal').addEventListener('click', e => {
       if (e.target === $('qualityModal')) $('qualityModal').hidden = true;
     });
 
-    // Navegador só deixa o áudio tocar depois de um gesto: qualquer clique
-    // na página retoma os contextos que nasceram suspensos (se não estiver mutado).
-    document.addEventListener('click', () => {
-      if (!audioMuted) {
-        for (const p of players.values()) p.audioCtx?.resume?.().catch?.(() => {});
-      }
-    }, { capture: true });
-
+    // ── Discord SDK ─────────────────────────────────────────────────────────
     (async () => {
       try {
         discordSdk = new DiscordSDK(CLIENT_ID);
         await discordSdk.ready();
 
         const { code } = await discordSdk.commands.authorize({
-          client_id: CLIENT_ID,
-          response_type: 'code',
-          state: '',
-          prompt: 'none',
-          scope: ['identify'],
+          client_id: CLIENT_ID, response_type: 'code',
+          state: '', prompt: 'none', scope: ['identify'],
         });
 
         const { access_token } = await api('/api/token', { code });
@@ -892,8 +1047,8 @@
         session = await api('/api/session', {
           access_token,
           instance_id: discordSdk.instanceId,
-          guild_id: discordSdk.guildId,
-          channel_id: discordSdk.channelId,
+          guild_id:    discordSdk.guildId,
+          channel_id:  discordSdk.channelId,
         });
 
         const av = auth.user.avatar
@@ -903,10 +1058,11 @@
         $('userName').textContent = auth.user.global_name || auth.user.username;
         $('userChip').hidden = false;
 
-        $('btnTela').disabled = false;
+        $('btnTela').disabled   = false;
         $('btnCamera').disabled = false;
 
         showEmpty('Ninguém transmitindo', 'Use os botões abaixo para começar.');
+        $('mainDock').hidden = false;
         updatePeople();
         connectViewer();
       } catch (e) {
