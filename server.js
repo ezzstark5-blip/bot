@@ -471,6 +471,84 @@ app.post('/api/room', (req, res) => {
   });
 });
 
+// -----------------------------------------------------------------
+// Assistente NEXT — proxy para a API da Groq (a chave nunca vai pro
+// front-end, fica só aqui no servidor). Defina GROQ_API_KEY no seu
+// .env; o valor abaixo é só um fallback pra não travar caso esqueça.
+// -----------------------------------------------------------------
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_MODEL = 'openai/gpt-oss-120b';
+
+const ASSISTANT_SYSTEM_PROMPT = `Você é o Assistente NEXT, o assistente virtual do site Next Cup / Next Transmissões (transmissão de tela e câmera via Discord Activity).
+Responda SOMENTE sobre dúvidas do site e da plataforma: como conectar a conta do Discord, como entrar em um canal de voz, como criar ou entrar numa sala, como transmitir tela ou câmera, qualidade/fps, links de sala, problemas comuns de conexão, etc.
+Se a pergunta não tiver relação com o site ou a plataforma, explique educadamente que você só pode ajudar com dúvidas do Next.
+Seja breve, direto, simpático e responda sempre em português do Brasil.`;
+
+const assistantHistory = new Map(); // sessão simples em memória, por IP
+
+function callGroq(messages) {
+  return new Promise((resolve, reject) => {
+    const postData = JSON.stringify({ model: GROQ_MODEL, messages, temperature: 0.5, max_tokens: 500 });
+    const request = https.request(
+      {
+        hostname: 'api.groq.com',
+        path: '/openai/v1/chat/completions',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData),
+          'Authorization': 'Bearer ' + GROQ_API_KEY,
+        },
+      },
+      (response) => {
+        let data = '';
+        response.on('data', (chunk) => (data += chunk));
+        response.on('end', () => {
+          try {
+            const json = JSON.parse(data);
+            if (response.statusCode >= 400) return reject(new Error(json.error?.message || 'Groq error ' + response.statusCode));
+            resolve(json);
+          } catch (e) {
+            reject(e);
+          }
+        });
+      },
+    );
+    request.on('error', reject);
+    request.write(postData);
+    request.end();
+  });
+}
+
+app.post('/api/assistant', async (req, res) => {
+  try {
+    if (!GROQ_API_KEY) {
+      console.error('[assistant] GROQ_API_KEY não definido no .env');
+      return res.status(500).json({ error: 'Assistente não configurado no servidor (GROQ_API_KEY ausente).' });
+    }
+    const message = String((req.body || {}).message || '').slice(0, 1000).trim();
+    if (!message) return res.status(400).json({ error: 'Mensagem vazia.' });
+
+    const key = req.ip || 'anon';
+    const history = assistantHistory.get(key) || [];
+    history.push({ role: 'user', content: message });
+
+    const messages = [{ role: 'system', content: ASSISTANT_SYSTEM_PROMPT }].concat(history.slice(-10));
+
+    const data = await callGroq(messages);
+    const reply = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content || '').trim()
+      || 'Desculpa, não consegui responder agora.';
+
+    history.push({ role: 'assistant', content: reply });
+    assistantHistory.set(key, history.slice(-10));
+
+    res.json({ reply });
+  } catch (err) {
+    console.error('[assistant] Erro:', err.message);
+    res.status(502).json({ error: 'Assistente indisponível no momento.' });
+  }
+});
+
 // Static files — desativa o index automático para que o fallback abaixo controle a rota /
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
@@ -659,6 +737,76 @@ const LANDING_HTML = `<!DOCTYPE html>
       pointer-events:none;user-select:none;
     }
     .credit-badge span{color:#ff5c5c;}
+
+    /* ── Assistente NEXT ── */
+    .assistant-trigger{
+      position:fixed;bottom:24px;left:24px;z-index:50;
+      width:44px;height:44px;border-radius:50%;
+      background:#c62828;border:none;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 4px 20px rgba(198,40,40,.5);
+      transition:transform .15s,box-shadow .15s;
+    }
+    .assistant-trigger:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(198,40,40,.7);}
+    .assistant-trigger svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+    .assistant-panel{
+      position:fixed;bottom:82px;left:24px;z-index:55;
+      width:360px;max-width:calc(100vw - 32px);height:480px;max-height:calc(100vh - 120px);
+      background:#0f1115;border:1px solid rgba(255,255,255,.08);border-radius:16px;
+      box-shadow:0 20px 60px rgba(0,0,0,.5);
+      display:flex;flex-direction:column;overflow:hidden;
+      opacity:0;transform:translateY(12px) scale(.98);pointer-events:none;
+      transition:opacity .18s,transform .18s;
+    }
+    .assistant-panel.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
+
+    .assistant-head{
+      display:flex;align-items:center;gap:12px;padding:16px 16px;
+      border-bottom:1px solid rgba(255,255,255,.07);
+      background:linear-gradient(180deg,rgba(198,40,40,.12),transparent);
+    }
+    .assistant-head-icon{
+      width:36px;height:36px;border-radius:10px;flex-shrink:0;
+      background:rgba(198,40,40,.18);border:1px solid rgba(198,40,40,.35);
+      display:flex;align-items:center;justify-content:center;
+    }
+    .assistant-head-icon svg{width:18px;height:18px;fill:none;stroke:#ff5c5c;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .assistant-head-text{flex:1;min-width:0;}
+    .assistant-head-text .t{font-size:.88rem;font-weight:700;color:#fff;}
+    .assistant-head-text .s{font-size:.72rem;color:rgba(255,255,255,.4);}
+    .assistant-close{background:none;border:none;color:rgba(255,255,255,.45);font-size:1rem;cursor:pointer;padding:4px;line-height:1;}
+    .assistant-close:hover{color:#fff;}
+
+    .assistant-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
+    .assistant-msg{max-width:88%;font-size:.82rem;line-height:1.55;padding:10px 13px;border-radius:12px;}
+    .assistant-msg.bot{align-self:flex-start;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.85);border-bottom-left-radius:4px;}
+    .assistant-msg.user{align-self:flex-end;background:#c62828;color:#fff;border-bottom-right-radius:4px;}
+    .assistant-msg b{color:#fff;}
+
+    .assistant-chips{display:flex;flex-wrap:wrap;gap:8px;padding:2px 0 4px;}
+    .assistant-chip{
+      background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+      color:rgba(255,255,255,.72);font-size:.72rem;padding:7px 12px;border-radius:999px;
+      cursor:pointer;transition:background .15s,border-color .15s;
+    }
+    .assistant-chip:hover{background:rgba(198,40,40,.15);border-color:rgba(198,40,40,.4);color:#fff;}
+
+    .assistant-foot{padding:12px 14px;border-top:1px solid rgba(255,255,255,.07);}
+    .assistant-input-row{display:flex;gap:8px;}
+    .assistant-input{
+      flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);
+      border-radius:10px;padding:10px 12px;color:#fff;font-size:.82rem;outline:none;
+    }
+    .assistant-input:focus{border-color:rgba(198,40,40,.5);}
+    .assistant-send{
+      width:38px;height:38px;border-radius:10px;background:#c62828;border:none;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;
+    }
+    .assistant-send:hover{background:#e53935;}
+    .assistant-send:disabled{opacity:.5;cursor:default;}
+    .assistant-send svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .assistant-typing{align-self:flex-start;font-size:.75rem;color:rgba(255,255,255,.4);padding:2px 4px;}
 
     /* ── Modal overlay ── */
     .modal-overlay{
@@ -891,6 +1039,43 @@ const LANDING_HTML = `<!DOCTYPE html>
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
   </button>
 
+  <!-- ═══════════════════ ASSISTENTE NEXT ═══════════════════ -->
+  <button class="assistant-trigger" id="assistantTrigger" title="Assistente NEXT">
+    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  </button>
+
+  <div class="assistant-panel" id="assistantPanel">
+    <div class="assistant-head">
+      <div class="assistant-head-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2v1h1a3 3 0 0 1 3 3v2a3 3 0 0 1-3 3h-.28a3 3 0 0 1-5.44 0H9a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3h1V4a2 2 0 0 1 2-2z"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/><path d="M5 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/></svg>
+      </div>
+      <div class="assistant-head-text">
+        <div class="t">Assistente NEXT</div>
+        <div class="s">Dúvidas da plataforma</div>
+      </div>
+      <button class="assistant-close" id="assistantClose">✕</button>
+    </div>
+
+    <div class="assistant-body" id="assistantBody">
+      <div class="assistant-msg bot">Olá! Sou o <b>Assistente NEXT</b> — posso te ajudar com dúvidas sobre a plataforma: conectar sua conta do Discord, criar ou entrar em salas, transmitir tela ou câmera, qualidade/fps e problemas comuns. Pergunte à vontade!</div>
+      <div class="assistant-chips" id="assistantChips">
+        <button class="assistant-chip">Como conecto minha conta?</button>
+        <button class="assistant-chip">Como crio uma sala?</button>
+        <button class="assistant-chip">Como transmito minha tela?</button>
+        <button class="assistant-chip">Meu bot não responde, o que faço?</button>
+      </div>
+    </div>
+
+    <div class="assistant-foot">
+      <div class="assistant-input-row">
+        <input class="assistant-input" id="assistantInput" placeholder="Digite sua dúvida…" maxlength="500">
+        <button class="assistant-send" id="assistantSend">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const CLIENT_ID = '1540951591685853305';
     const REDIRECT  = location.origin + location.pathname;
@@ -1064,6 +1249,78 @@ const LANDING_HTML = `<!DOCTYPE html>
         setTimeout(()=>{btnCopy.textContent='Copiar';btnCopy.classList.remove('ok');},2000);
       });
     });
+
+    // ── Assistente NEXT ──
+    (function(){
+      var trigger = document.getElementById('assistantTrigger');
+      var panel = document.getElementById('assistantPanel');
+      var closeBtn = document.getElementById('assistantClose');
+      var body = document.getElementById('assistantBody');
+      var chips = document.getElementById('assistantChips');
+      var input = document.getElementById('assistantInput');
+      var sendBtn = document.getElementById('assistantSend');
+      var sending = false;
+
+      function toggle(open){
+        panel.classList.toggle('open', open);
+        if (open) setTimeout(function(){ input.focus(); }, 150);
+      }
+      trigger.addEventListener('click', function(){ toggle(!panel.classList.contains('open')); });
+      closeBtn.addEventListener('click', function(){ toggle(false); });
+
+      function addMsg(text, who){
+        var div = document.createElement('div');
+        div.className = 'assistant-msg ' + who;
+        div.textContent = text;
+        body.appendChild(div);
+        body.scrollTop = body.scrollHeight;
+        return div;
+      }
+
+      function send(text){
+        text = (text || input.value).trim();
+        if (!text || sending) return;
+        sending = true;
+        input.value = '';
+        if (chips) { chips.remove(); chips = null; }
+        addMsg(text, 'user');
+        sendBtn.disabled = true;
+        var typing = document.createElement('div');
+        typing.className = 'assistant-typing';
+        typing.textContent = 'Digitando…';
+        body.appendChild(typing);
+        body.scrollTop = body.scrollHeight;
+
+        fetch('/api/assistant', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text }),
+        })
+          .then(function(r){ return r.json(); })
+          .then(function(d){
+            typing.remove();
+            addMsg(d.reply || d.error || 'Não consegui responder agora.', 'bot');
+          })
+          .catch(function(){
+            typing.remove();
+            addMsg('Erro ao falar com o assistente. Tente novamente.', 'bot');
+          })
+          .finally(function(){
+            sending = false;
+            sendBtn.disabled = false;
+          });
+      }
+
+      sendBtn.addEventListener('click', function(){ send(); });
+      input.addEventListener('keydown', function(e){
+        if (e.key === 'Enter') send();
+      });
+      if (chips) {
+        chips.querySelectorAll('.assistant-chip').forEach(function(chip){
+          chip.addEventListener('click', function(){ send(chip.textContent); });
+        });
+      }
+    })();
   </script>
 </body>
 </html>`;
