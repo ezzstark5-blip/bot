@@ -1056,13 +1056,12 @@ const LANDING_HTML = `<!DOCTYPE html>
         <button class="assistant-chip">Como conecto minha conta?</button>
         <button class="assistant-chip">Como crio uma sala?</button>
         <button class="assistant-chip">Como transmito minha tela?</button>
-        <button class="assistant-chip">Meu bot não responde, o que faço?</button>
       </div>
     </div>
 
     <div class="assistant-foot">
       <div class="assistant-input-row">
-        <input class="assistant-input" id="assistantInput" placeholder="Digite sua dúvida…" maxlength="500">
+        <input class="assistant-input" id="assistantInput" placeholder="Digite sua dúvida…" maxlength="500" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" name="next-assistant-msg-9f3a">
         <button class="assistant-send" id="assistantSend">
           <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
