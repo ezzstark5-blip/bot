@@ -482,7 +482,7 @@ const GROQ_MODEL = 'openai/gpt-oss-120b';
 const ASSISTANT_SYSTEM_PROMPT = `Você é o Assistente NEXT — o assistente de suporte do site Next Cup / Next Transmissões, uma plataforma para compartilhar tela ou câmera ao vivo dentro do Discord (via Discord Activity).
 
 ## Como o site funciona de verdade (use isso pra responder, não invente nada além disso)
-1. Criar uma sala: na página principal tem um botão "Criar sala". Ao clicar, gera um link único da sala, que pode ser copiado no botão "Copiar" e enviado pra quem vai transmitir ou assistir. O link expira quando a sala fecha (fica vazia).
+1. Salas: o site não tem botão de criar sala. A sala é criada automaticamente quando alguém inicia a Activity pelo Discord (card "Iniciar no Discord"); os participantes entram pela call do servidor.
 2. Entrar via Discord: tem um card "Iniciar no Discord" na página com 2 passos:
    - Passo 1: clicar em "Conectar Discord" no topo da página pra autenticar (pega nome e foto automaticamente, sem senha e sem cadastro).
    - Passo 2: depois de conectado, o sistema verifica a cada 5 segundos se a pessoa entrou em um canal de voz no Discord. O botão só libera quando ela está de fato em um canal de voz — se não achar nenhum canal, é porque ela não está em nenhum, então precisa entrar em um canal de voz no servidor do Discord.
@@ -658,23 +658,23 @@ const LANDING_HTML = `<!DOCTYPE html>
 
     /* ── Hero ── */
     .hero{position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;
-      flex-wrap:wrap;gap:64px;justify-content:center;
-      padding:110px 6vw 70px;}
-    .hero-content{display:flex;flex-direction:column;gap:22px;max-width:480px;flex:1 1 400px;}
+      flex-wrap:wrap;gap:120px;justify-content:center;
+      padding:110px 7vw 70px;}
+    .hero-content{display:flex;flex-direction:column;gap:20px;max-width:420px;flex:1 1 360px;}
     .eyebrow{display:inline-flex;align-items:center;gap:8px;
       font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
       color:rgba(255,255,255,.4);}
     .eyebrow-dot{width:5px;height:5px;border-radius:50%;background:#c62828;}
-    h1{font-size:clamp(2.2rem,5vw,3.4rem);font-weight:900;line-height:1.08;
+    h1{font-size:clamp(1.9rem,4vw,2.8rem);font-weight:900;line-height:1.08;
       letter-spacing:-.5px;color:#fff;}
-    .desc{font-size:.93rem;color:rgba(255,255,255,.5);line-height:1.65;max-width:400px;}
+    .desc{font-size:.86rem;color:rgba(255,255,255,.5);line-height:1.65;max-width:380px;}
 
     /* Features */
-    .features{display:flex;flex-direction:column;gap:9px;}
-    .feature{display:flex;align-items:center;gap:12px;font-size:.83rem;color:rgba(255,255,255,.45);}
-    .feature-icon{width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.05);
+    .features{display:flex;flex-direction:column;gap:8px;}
+    .feature{display:flex;align-items:center;gap:11px;font-size:.77rem;color:rgba(255,255,255,.45);}
+    .feature-icon{width:25px;height:25px;border-radius:7px;background:rgba(255,255,255,.05);
       border:1px solid rgba(198,40,40,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .feature-icon svg{width:13px;height:13px;fill:none;stroke:#c62828;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .feature-icon svg{width:12px;height:12px;fill:none;stroke:#c62828;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
     /* Stats */
     .stats{display:flex;gap:28px;padding-top:4px;}
@@ -682,32 +682,6 @@ const LANDING_HTML = `<!DOCTYPE html>
     .stat-val{font-size:1.35rem;font-weight:800;color:#fff;}
     .stat-label{font-size:.7rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;}
     .stat-sep{width:1px;background:rgba(255,255,255,.08);align-self:stretch;}
-
-    /* Botão criar */
-    .btn-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
-    .btn-criar{display:inline-flex;align-items:center;gap:9px;padding:13px 28px;
-      background:#c62828;border:none;border-radius:10px;color:#fff;font-size:.93rem;
-      font-weight:700;cursor:pointer;box-shadow:0 4px 24px rgba(198,40,40,.4);
-      transition:transform .15s,box-shadow .15s;}
-    .btn-criar:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(198,40,40,.55);}
-    .btn-criar:active{transform:translateY(0);}
-    .btn-criar:disabled{opacity:.5;cursor:not-allowed;transform:none;}
-    .btn-criar svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
-    .btn-hint{font-size:.75rem;color:rgba(255,255,255,.3);}
-
-    /* URL box */
-    .url-box{display:none;flex-direction:column;gap:8px;width:100%;max-width:460px;}
-    .url-box.on{display:flex;}
-    .url-label{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.28);}
-    .url-row{display:flex;align-items:center;gap:8px;
-      background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 14px;}
-    .url-input{flex:1;font-size:.8rem;color:#b5bac1;background:none;border:none;outline:none;
-      font-family:inherit;cursor:default;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .btn-copy{flex-shrink:0;background:#c62828;border:none;border-radius:7px;padding:6px 14px;
-      color:#fff;font-size:.76rem;font-weight:600;cursor:pointer;transition:background .15s;}
-    .btn-copy:hover{background:#d32f2f;}
-    .btn-copy.ok{background:#2e7d32;}
-    .url-hint-text{font-size:.72rem;color:rgba(255,255,255,.25);line-height:1.4;}
 
     /* Footer */
     .footer{position:relative;z-index:1;padding:20px 40px 28px 10%;
@@ -789,12 +763,12 @@ const LANDING_HTML = `<!DOCTYPE html>
 
     /* ── Card "Iniciar no Discord" — desenhado no hero, ao lado do texto ── */
     .connect-wrap{
-      position:relative;z-index:1;flex:0 1 360px;width:100%;
+      position:relative;z-index:1;flex:0 1 320px;width:100%;
       display:flex;justify-content:center;
     }
     .modal-card{
       background:#18191c;border:1px solid rgba(255,255,255,.1);
-      border-radius:16px;padding:20px;width:100%;max-width:350px;
+      border-radius:16px;padding:18px;width:100%;max-width:315px;
       box-shadow:0 20px 60px rgba(0,0,0,.5);
     }
     .modal-header{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
@@ -907,22 +881,6 @@ const LANDING_HTML = `<!DOCTYPE html>
           <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
           Sem passar pelo servidor — baixa latência
         </div>
-      </div>
-
-      <div class="btn-row anim-6">
-        <button class="btn-criar" id="btnCriar">
-          <svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-          Criar sala
-        </button>
-      </div>
-
-      <div class="url-box" id="urlBox">
-        <span class="url-label">Link da sala</span>
-        <div class="url-row">
-          <input class="url-input" id="urlInput" readonly>
-          <button class="btn-copy" id="btnCopy">Copiar</button>
-        </div>
-        <p class="url-hint-text">Envie para quem vai transmitir ou assistir. Expira quando a sala fechar.</p>
       </div>
     </div>
 
@@ -1265,34 +1223,6 @@ const LANDING_HTML = `<!DOCTYPE html>
         });
       }
     })();
-
-    // ── Criar sala ──
-    const btnCriar = document.getElementById('btnCriar');
-    const urlBox   = document.getElementById('urlBox');
-    const urlInput = document.getElementById('urlInput');
-    const btnCopy  = document.getElementById('btnCopy');
-
-    btnCriar.addEventListener('click', async () => {
-      btnCriar.disabled=true; btnCriar.innerHTML='Criando…';
-      try {
-        const r = await fetch('/api/room',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
-        const d = await r.json();
-        if (!r.ok) throw new Error(d.error||'Erro');
-        const u = new URL(location.origin);
-        u.searchParams.set('room',d.roomId); u.searchParams.set('t',d.viewerToken);
-        urlInput.value = u.toString();
-        urlBox.classList.add('on');
-        btnCriar.innerHTML='<svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 5v14"/><path d="M5 12h14"/></svg> Criar outra sala';
-        btnCriar.disabled=false;
-        urlBox.scrollIntoView({behavior:'smooth',block:'nearest'});
-      } catch(e) { btnCriar.innerHTML='Erro — tente novamente'; btnCriar.disabled=false; }
-    });
-    btnCopy.addEventListener('click',()=>{
-      navigator.clipboard.writeText(urlInput.value).then(()=>{
-        btnCopy.textContent='Copiado!'; btnCopy.classList.add('ok');
-        setTimeout(()=>{btnCopy.textContent='Copiar';btnCopy.classList.remove('ok');},2000);
-      });
-    });
   </script>
 </body>
 </html>`;
