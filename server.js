@@ -633,7 +633,10 @@ const LANDING_HTML = `<!DOCTYPE html>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Next Cup · Transmissões</title>
-  <link rel="preload" href="/foto/Next_-_Banner.png" as="image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="preload" href="/assets/landing/bg.png" as="image">
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     html,body{min-height:100%;scroll-behavior:smooth;}
@@ -676,13 +679,13 @@ const LANDING_HTML = `<!DOCTYPE html>
     .anim-6{opacity:0;animation:slideUp .55s 1.4s ease forwards;}
     .topbar{opacity:0;animation:fadeIn .4s .6s ease forwards;}
     .bg    {opacity:0;animation:fadeIn .8s .2s ease forwards;}
-    body{font-family:'Segoe UI',system-ui,sans-serif;background:#0d0d0f;color:#f2f3f5;}
+    body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#0d0d0f;color:#f2f3f5;}
 
     /* ── Fundo ── */
     .bg{position:fixed;inset:0;z-index:0;pointer-events:none;
       background-color:#0d0d0f;
       background-image:linear-gradient(to right,rgba(8,9,12,.96) 35%,rgba(8,9,12,.6) 65%,rgba(8,9,12,.15) 100%),
-      url('/foto/Next_-_Banner.png');
+      url('/assets/landing/bg.png');
       background-size:cover;background-position:center;}
     .bg-fade{position:fixed;bottom:0;left:0;right:0;height:260px;z-index:0;pointer-events:none;
       background:linear-gradient(0deg,#0d0d0f 0%,transparent 100%);}
@@ -695,14 +698,14 @@ const LANDING_HTML = `<!DOCTYPE html>
       backdrop-filter:blur(0px);}
     .topbar-left{display:flex;align-items:center;gap:10px;}
     .topbar-logo{width:30px;height:30px;border-radius:7px;object-fit:contain;}
-    .topbar-name{font-size:.82rem;font-weight:800;color:#fff;letter-spacing:.04em;text-transform:uppercase;}
+    .topbar-name{font-family:'Agdasima',sans-serif;font-size:.95rem;font-weight:700;color:#fff;letter-spacing:.04em;text-transform:uppercase;}
     .topbar-sep{width:1px;height:14px;background:rgba(255,255,255,.15);}
-    .topbar-sub{font-size:.75rem;color:rgba(255,255,255,.35);}
+    .topbar-sub{font-family:'Agdasima',sans-serif;font-size:.8rem;color:rgba(255,255,255,.35);}
     .btn-discord{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;
-      background:#5865f2;border:none;border-radius:999px;color:#fff;font-size:.8rem;
-      font-weight:600;cursor:pointer;box-shadow:0 2px 14px rgba(88,101,242,.4);
+      background:#ff0000;border:none;border-radius:999px;color:#fff;font-size:.8rem;
+      font-weight:700;cursor:pointer;box-shadow:0 2px 7px rgba(255,0,0,.4);
       transition:transform .15s,box-shadow .15s;}
-    .btn-discord:hover{transform:scale(1.04);box-shadow:0 4px 22px rgba(88,101,242,.6);}
+    .btn-discord:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(255,0,0,.5);}
     .btn-discord svg{width:17px;height:17px;fill:#fff;flex-shrink:0;}
     .user-pill{display:none;align-items:center;gap:8px;
       background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
@@ -716,20 +719,26 @@ const LANDING_HTML = `<!DOCTYPE html>
       flex-wrap:wrap;gap:clamp(100px,20vw,400px);justify-content:space-between;
       padding:110px 3vw 70px;}
     .hero-content{display:flex;flex-direction:column;gap:20px;max-width:420px;flex:1 1 360px;}
-    .eyebrow{display:inline-flex;align-items:center;gap:8px;
-      font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
-      color:rgba(255,255,255,.4);}
-    .eyebrow-dot{width:5px;height:5px;border-radius:50%;background:#c62828;}
-    h1{font-size:clamp(1.9rem,4vw,2.8rem);font-weight:900;line-height:1.08;
-      letter-spacing:-.5px;color:#fff;}
-    .desc{font-size:.86rem;color:rgba(255,255,255,.5);line-height:1.65;max-width:380px;}
+    .eyebrow{display:inline-flex;align-items:center;gap:10px;
+      font-size:.75rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+      color:#e9edf2;}
+    .eyebrow-dot{width:3px;height:15px;border-radius:999px;background:#ff0000;
+      box-shadow:0 0 12px rgba(1,134,209,.65);}
+    .eyebrow-sep{padding-left:10px;margin-left:2px;border-left:1px solid rgba(255,0,0,.26);
+      font-size:.74rem;letter-spacing:0;text-transform:none;color:#6f5a5a;}
+    h1{font-size:clamp(1.9rem,4vw,2.6rem);font-weight:700;line-height:1.12;
+      letter-spacing:-1.05px;
+      background:linear-gradient(142deg,#5e1818 15%,#ff0000 45%,#ff8383 89%);
+      -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+      filter:drop-shadow(0 2px 18px rgba(4,8,13,.26));}
+    .desc{font-size:.9rem;color:#a5aebd;line-height:1.5;max-width:460px;}
 
     /* Features */
-    .features{display:flex;flex-direction:column;gap:8px;}
-    .feature{display:flex;align-items:center;gap:11px;font-size:.77rem;color:rgba(255,255,255,.45);}
-    .feature-icon{width:25px;height:25px;border-radius:7px;background:rgba(255,255,255,.05);
-      border:1px solid rgba(198,40,40,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .feature-icon svg{width:12px;height:12px;fill:none;stroke:#c62828;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .features{display:flex;flex-direction:column;gap:12px;padding-top:4px;}
+    .feature{display:flex;align-items:center;gap:11px;font-size:.8rem;color:#8f7979;line-height:1.5;}
+    .feature-icon{width:28px;height:28px;border-radius:7px;background:rgba(34,20,20,.5);
+      border:1px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;flex-shrink:0;backdrop-filter:blur(10px);}
+    .feature-icon img{width:15px;height:15px;}
 
     /* Stats */
     .stats{display:flex;gap:28px;padding-top:4px;}
@@ -827,8 +836,8 @@ const LANDING_HTML = `<!DOCTYPE html>
       box-shadow:0 20px 60px rgba(0,0,0,.5);
     }
     .modal-header{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
-    .modal-title{display:flex;align-items:center;gap:7px;font-size:.82rem;font-weight:700;color:#fff;}
-    .modal-title svg{width:14px;height:14px;fill:none;stroke:#c62828;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .modal-title{display:flex;align-items:center;gap:7px;font-family:'Agdasima',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.02em;color:#fff;text-transform:uppercase;}
+    .modal-title img{width:21px;height:21px;}
 
     /* Steps */
     .modal-step{display:flex;flex-direction:column;gap:8px;}
@@ -889,7 +898,7 @@ const LANDING_HTML = `<!DOCTYPE html>
 <body>
   <!-- Splash de entrada -->
   <div class="splash" id="splash">
-    <img class="splash-logo" src="/foto/1321a2929b5943c3cc2be6e3722c2552.png" alt="NEXT">
+    <img class="splash-logo" src="/assets/landing/logo.png" alt="NEXT">
     <div class="splash-bar"></div>
   </div>
 
@@ -899,7 +908,7 @@ const LANDING_HTML = `<!DOCTYPE html>
   <!-- Topbar -->
   <nav class="topbar">
     <div class="topbar-left">
-      <img class="topbar-logo" src="/foto/1321a2929b5943c3cc2be6e3722c2552.png" alt="NEXT">
+      <img class="topbar-logo" src="/assets/landing/logo.png" alt="Next Cup">
       <span class="topbar-name">Next Cup</span>
       <div class="topbar-sep"></div>
       <span class="topbar-sub">transmissões</span>
@@ -919,26 +928,22 @@ const LANDING_HTML = `<!DOCTYPE html>
   <!-- Hero -->
   <section class="hero">
     <div class="hero-content">
-      <div class="eyebrow anim-1"><span class="eyebrow-dot"></span>Next Cup · Ao vivo</div>
-      <h1 class="anim-2">Sua tela, ao vivo,<br>direto para a sala.</h1>
-      <p class="desc anim-3">Crie uma sala em um clique, compartilhe o link e transmita pelo navegador. Sem instalar nada, sem cadastro.</p>
+      <div class="eyebrow anim-1"><span class="eyebrow-dot"></span>Next CUP<span class="eyebrow-sep">ponto a ponto</span></div>
+      <h1 class="anim-2">Sua tela, ao vivo,<br>direto para o Discord.</h1>
+      <p class="desc anim-3">Entre na sua atividade do Discord e coloque para transmitir pelo navegador. Assim, seus amigos vão conseguir assistir à transmissão diretamente pelo Discord.</p>
 
       <div class="features anim-4">
         <div class="feature">
-          <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
-          Sala instantânea, entra por link
+          <div class="feature-icon"><img src="/assets/landing/icon-bolt.svg" alt=""></div>
+          Sala instantanea
         </div>
         <div class="feature">
-          <div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></div>
-          Compartilhe tela ou câmera
+          <div class="feature-icon"><img src="/assets/landing/icon-shield.svg" alt=""></div>
+          O video vai de um navegador ao outro, sem passar pelo servidor
         </div>
         <div class="feature">
-          <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-          Várias pessoas transmitindo ao mesmo tempo
-        </div>
-        <div class="feature">
-          <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-          Sem passar pelo servidor — baixa latência
+          <div class="feature-icon"><img src="/assets/landing/icon-users.svg" alt=""></div>
+          Varias pessoas podem transmitir ao mesmo tempo
         </div>
       </div>
     </div>
@@ -950,7 +955,7 @@ const LANDING_HTML = `<!DOCTYPE html>
         <!-- Cabeçalho -->
         <div class="modal-header">
           <div class="modal-title">
-            <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <img src="/assets/landing/icon-discord.svg" alt="">
             Iniciar no Discord
           </div>
         </div>
