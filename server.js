@@ -679,7 +679,9 @@ const LANDING_HTML = `<!DOCTYPE html>
     .anim-6{opacity:0;animation:slideUp .55s 1.4s ease forwards;}
     .topbar{opacity:0;animation:fadeIn .4s .6s ease forwards;}
     .bg    {opacity:0;animation:fadeIn .8s .2s ease forwards;}
-    body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#0d0d0f;color:#f2f3f5;}
+    body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#0d0d0f;color:#f2f3f5;
+      cursor:default;user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;}
+    input,textarea{user-select:text;-webkit-user-select:text;-moz-user-select:text;cursor:text;}
 
     /* ── Fundo ── */
     .bg{position:fixed;inset:0;z-index:0;pointer-events:none;
@@ -779,16 +781,20 @@ const LANDING_HTML = `<!DOCTYPE html>
       background:linear-gradient(180deg,rgba(198,40,40,.12),transparent);
     }
     .assistant-head-icon{
-      width:36px;height:36px;border-radius:10px;flex-shrink:0;
-      background:rgba(198,40,40,.18);border:1px solid rgba(198,40,40,.35);
+      width:38px;height:38px;border-radius:12px;flex-shrink:0;
+      background:#c62828;border:none;
       display:flex;align-items:center;justify-content:center;
+      box-shadow:0 3px 10px rgba(198,40,40,.35);
     }
-    .assistant-head-icon svg{width:18px;height:18px;fill:none;stroke:#ff5c5c;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .assistant-head-icon svg{width:19px;height:19px;fill:#fff;stroke:none;}
     .assistant-head-text{flex:1;min-width:0;}
-    .assistant-head-text .t{font-size:.88rem;font-weight:700;color:#fff;}
+    .assistant-head-text .t{font-size:.9rem;font-weight:700;color:#fff;}
     .assistant-head-text .s{font-size:.72rem;color:rgba(255,255,255,.4);}
-    .assistant-close{background:none;border:none;color:rgba(255,255,255,.45);font-size:1rem;cursor:pointer;padding:4px;line-height:1;}
-    .assistant-close:hover{color:#fff;}
+    .assistant-head-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+    .assistant-hide{background:none;border:none;color:rgba(255,255,255,.5);font-size:.75rem;cursor:pointer;padding:4px;}
+    .assistant-hide:hover{color:#fff;}
+    .assistant-close{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.7);font-size:.8rem;cursor:pointer;width:28px;height:28px;border-radius:8px;line-height:1;}
+    .assistant-close:hover{background:rgba(255,255,255,.12);color:#fff;}
 
     .assistant-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;
       scrollbar-width:thin;scrollbar-color:#c62828 rgba(255,255,255,.04);}
@@ -803,8 +809,8 @@ const LANDING_HTML = `<!DOCTYPE html>
 
     .assistant-chips{display:flex;flex-wrap:wrap;gap:8px;padding:2px 0 4px;}
     .assistant-chip{
-      background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
-      color:rgba(255,255,255,.72);font-size:.72rem;padding:7px 12px;border-radius:999px;
+      background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
+      color:rgba(255,255,255,.72);font-size:.74rem;padding:8px 13px;border-radius:12px;
       cursor:pointer;transition:background .15s,border-color .15s;
     }
     .assistant-chip:hover{background:rgba(198,40,40,.15);border-color:rgba(198,40,40,.4);color:#fff;}
@@ -1013,19 +1019,22 @@ const LANDING_HTML = `<!DOCTYPE html>
 
   <!-- ═══════════════════ ASSISTENTE NEXT ═══════════════════ -->
   <button class="assistant-trigger" id="assistantTrigger" title="Assistente NEXT">
-    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <svg viewBox="0 0 24 24"><path d="M7.5 5h9A3.5 3.5 0 0 1 20 8.5v3a3.5 3.5 0 0 1-3.5 3.5H12l-3.5 3.2V15H7.5A3.5 3.5 0 0 1 4 11.5v-3A3.5 3.5 0 0 1 7.5 5z"/></svg>
   </button>
 
   <div class="assistant-panel" id="assistantPanel">
     <div class="assistant-head">
       <div class="assistant-head-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2v1h1a3 3 0 0 1 3 3v2a3 3 0 0 1-3 3h-.28a3 3 0 0 1-5.44 0H9a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3h1V4a2 2 0 0 1 2-2z"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/><path d="M5 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 2l1.6 5.4L19 9l-5.4 1.6L12 16l-1.6-5.4L5 9l5.4-1.6L12 2z"/><path d="M19 14l.8 2.6 2.2.8-2.2.8L19 21l-.8-2.8-2.2-.8 2.2-.8L19 14z"/></svg>
       </div>
       <div class="assistant-head-text">
         <div class="t">Assistente NEXT</div>
-        <div class="s">Dúvidas da plataforma</div>
+        <div class="s">Dúvidas da plataforma · todas as páginas</div>
       </div>
-      <button class="assistant-close" id="assistantClose">✕</button>
+      <div class="assistant-head-actions">
+        <button class="assistant-hide" id="assistantHide">Esconder</button>
+        <button class="assistant-close" id="assistantClose">✕</button>
+      </div>
     </div>
 
     <div class="assistant-body" id="assistantBody">
@@ -1299,6 +1308,8 @@ const LANDING_HTML = `<!DOCTYPE html>
       }
       trigger.addEventListener('click', function(){ toggle(!panel.classList.contains('open')); });
       closeBtn.addEventListener('click', function(){ toggle(false); });
+      var hideBtn = document.getElementById('assistantHide');
+      if (hideBtn) hideBtn.addEventListener('click', function(){ toggle(false); });
 
       function addMsg(text, who){
         var div = document.createElement('div');
