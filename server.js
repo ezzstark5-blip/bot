@@ -638,61 +638,62 @@ const LANDING_HTML = `<!DOCTYPE html>
     /* ── Modal card ── */
     .modal-card{
       background:#18191c;border:1px solid rgba(255,255,255,.1);
-      border-radius:14px;padding:20px;width:90%;max-width:320px;
+      border-radius:12px;padding:14px 16px;width:90%;max-width:272px;
       transform:translateY(16px) scale(.97);
       transition:transform .22s cubic-bezier(.34,1.56,.64,1);
       box-shadow:0 16px 50px rgba(0,0,0,.55);
     }
     .modal-overlay.open .modal-card{transform:translateY(0) scale(1);}
-    .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-    .modal-title{display:flex;align-items:center;gap:7px;font-size:.85rem;font-weight:700;color:#fff;}
-    .modal-title svg{width:14px;height:14px;fill:#c62828;stroke:none;}
-    .modal-close{background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;font-size:.9rem;padding:2px 6px;border-radius:5px;transition:color .15s;}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+    .modal-title{display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:#fff;}
+    .modal-title svg{width:13px;height:13px;fill:#c62828;stroke:none;}
+    .modal-close{background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;font-size:.8rem;padding:2px 5px;border-radius:5px;transition:color .15s;line-height:1;}
     .modal-close:hover{color:#fff;background:rgba(255,255,255,.07);}
 
     /* Steps */
-    .modal-step{display:flex;flex-direction:column;gap:8px;}
-    .step-label{display:flex;align-items:center;gap:7px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);}
-    .step-badge{width:18px;height:18px;border-radius:50%;background:#c62828;color:#fff;font-size:.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .modal-step{display:flex;flex-direction:column;gap:7px;}
+    .step-label{display:flex;align-items:center;gap:6px;font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);}
+    .step-badge{width:16px;height:16px;border-radius:50%;background:#c62828;color:#fff;font-size:.55rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
     .step-badge.done{background:#2e7d32;}
-    .step-text{font-size:.78rem;color:rgba(255,255,255,.4);line-height:1.5;}
+    .step-text{font-size:.72rem;color:rgba(255,255,255,.4);line-height:1.45;}
 
     /* Hint de aguardar */
     .modal-hint-row{
-      display:flex;align-items:center;gap:8px;
-      padding:9px 12px;
+      display:flex;align-items:center;gap:7px;
+      padding:8px 10px;
       background:rgba(88,101,242,.08);border:1px solid rgba(88,101,242,.2);
-      border-radius:8px;font-size:.78rem;color:rgba(255,255,255,.4);
+      border-radius:8px;font-size:.72rem;color:rgba(255,255,255,.4);
     }
-    .modal-hint-row svg{width:13px;height:13px;fill:none;stroke:#5865f2;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+    .modal-hint-row svg{width:12px;height:12px;fill:none;stroke:#5865f2;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
 
     /* Card usuário compacto */
-    .user-card-sm{display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:9px;}
-    .user-card-av-sm{width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;}
-    .user-card-name-sm{font-size:.82rem;font-weight:700;color:#fff;}
-    .user-card-tag-sm{font-size:.68rem;color:rgba(255,255,255,.3);}
-    .badge-ok{margin-left:auto;background:#2e7d32;color:#fff;border-radius:50%;width:18px;height:18px;font-size:.6rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .user-card-sm{display:flex;align-items:center;gap:9px;padding:8px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;}
+    .user-card-av-sm{width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;}
+    .user-card-name-sm{font-size:.76rem;font-weight:700;color:#fff;}
+    .user-card-tag-sm{font-size:.62rem;color:rgba(255,255,255,.3);}
+    .badge-ok{margin-left:auto;background:#2e7d32;color:#fff;border-radius:50%;width:16px;height:16px;font-size:.55rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 
     /* Canal de voz */
-    .voice-row{display:flex;align-items:center;gap:9px;padding:9px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:9px;}
-    .voice-icon svg{width:14px;height:14px;fill:none;stroke:#3ba55d;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-    .voice-name{font-size:.82rem;font-weight:600;color:#f2f3f5;}
-    .voice-guild{font-size:.68rem;color:rgba(255,255,255,.28);}
-    .voice-info{flex:1;}
+    .voice-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;}
+    .voice-icon svg{width:13px;height:13px;fill:none;stroke:#3ba55d;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .voice-name{font-size:.76rem;font-weight:600;color:#f2f3f5;}
+    .voice-guild{font-size:.62rem;color:rgba(255,255,255,.28);}
+    .voice-guild.on{color:#3ba55d;}
+    .voice-info{flex:1;min-width:0;}
     .voice-spinner{width:12px;height:12px;border:2px solid rgba(255,255,255,.15);border-top-color:#3ba55d;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
     .voice-spinner.hidden{display:none;}
 
     /* Erro */
-    .modal-error{font-size:.75rem;color:#ff8a80;background:rgba(255,50,50,.08);border:1px solid rgba(255,50,50,.2);border-radius:7px;padding:7px 10px;}
+    .modal-error{font-size:.68rem;color:#ff8a80;background:rgba(255,50,50,.08);border:1px solid rgba(255,50,50,.2);border-radius:7px;padding:6px 9px;line-height:1.4;}
 
     /* Botão conectar */
     .modal-btn-connect{
-      display:flex;align-items:center;justify-content:center;gap:8px;
-      padding:10px 0;background:#c62828;border:none;border-radius:9px;
-      color:#fff;font-size:.84rem;font-weight:700;cursor:pointer;width:100%;
+      display:flex;align-items:center;justify-content:center;gap:7px;
+      padding:9px 0;background:#c62828;border:none;border-radius:8px;
+      color:#fff;font-size:.78rem;font-weight:700;cursor:pointer;width:100%;
       box-shadow:0 3px 14px rgba(198,40,40,.3);
       transition:background .15s,transform .15s;
-      margin-top:2px;
+      margin-top:3px;
     }
     .modal-btn-connect:hover:not(:disabled){background:#d32f2f;transform:translateY(-1px);}
     .modal-btn-connect:disabled{opacity:.4;cursor:not-allowed;}
@@ -814,6 +815,7 @@ const LANDING_HTML = `<!DOCTYPE html>
         </div>
 
         <!-- Canal de voz com status de refresh -->
+        <div class="step-label" style="margin-top:3px"><span class="step-badge">2</span> Canal de voz</div>
         <div class="voice-row" id="voiceChannelRow">
           <div class="voice-icon">
             <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
@@ -915,7 +917,7 @@ const LANDING_HTML = `<!DOCTYPE html>
       const errEl     = document.getElementById('modalError');
       const spinner   = document.getElementById('voiceSpinner');
 
-      if (!silent) { vcName.textContent = 'Buscando…'; vcGuild.textContent = ''; }
+      if (!silent) { vcName.textContent = 'Buscando…'; vcGuild.textContent = ''; vcGuild.classList.remove('on'); }
       if (spinner) spinner.classList.remove('hidden');
       errEl.hidden = true;
 
@@ -939,23 +941,25 @@ const LANDING_HTML = `<!DOCTYPE html>
           if (d.channel) {
             vcName.textContent  = d.channel.name;
             vcGuild.textContent = g.name;
+            vcGuild.classList.add('on');
             guildId   = g.id;
             channelId = d.channel.id;
             btnConn.disabled = false;
+            errEl.hidden = true;
             if (spinner) spinner.classList.add('hidden');
             return true;
           }
         } catch {}
       }
 
-      // Nenhum canal encontrado
-      if (!silent) {
-        vcName.textContent  = 'Nenhum canal encontrado';
-        vcGuild.textContent = 'Entre em um canal de voz e aguarde...';
-        errEl.hidden = false;
-        errEl.textContent = 'Verificando novamente em 5 segundos…';
-      }
-      if (spinner) spinner.classList.add('hidden');
+      // Ainda não entrou em nenhum canal — segue verificando a cada 5s.
+      // O botão só é liberado quando a pessoa realmente conectar na call.
+      vcName.textContent  = 'Você não está em uma call';
+      vcGuild.textContent = 'Verificando novamente em 5 segundos…';
+      vcGuild.classList.remove('on');
+      errEl.hidden = true;
+      btnConn.disabled = true;
+      if (spinner) spinner.classList.remove('hidden');
       return false;
     }
 
