@@ -12,7 +12,7 @@
       href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/share.css?v=34" />
+    <link rel="stylesheet" href="/share.css?v=35" />
   </head>
   <body>
     <div class="bloom" aria-hidden="true"></div>
@@ -73,106 +73,50 @@
       <div class="streams">
 
       <!-- ────────────────────────────── Palco ─────────────────────────────── -->
-      <section class="stage" id="bloco-tela" aria-label="Transmissão de tela">
-        <div class="stage__surface">
-          <!-- camadas de vídeo — o share.js alterna setup ⇄ live -->
-          <div class="stage__layer" id="tela-setup">
-            <div class="stage__idle" id="tela-vazio" aria-hidden="true"></div>
-            <video id="tela-previa" class="stage__video" muted playsinline hidden></video>
+      <section class="camera" id="bloco-tela" aria-label="Transmissão de tela">
+        <h2 class="camera__title">Tela</h2>
+
+        <div id="tela-setup">
+          <div class="camera__frame">
+            <div class="camera__idle" id="tela-vazio">Sem prévia</div>
+            <video id="tela-previa" class="camera__video" muted playsinline hidden></video>
           </div>
-
-          <div class="stage__layer" id="tela-live" hidden>
-            <video id="tela-preview" class="stage__video" muted playsinline></video>
+          <div class="camera__actions">
+            <button id="tela-start" type="button" class="btn btn--primary">Transmitir tela</button>
+            <button id="tela-escolher" type="button" hidden aria-hidden="true" tabindex="-1"></button>
           </div>
-
-          <div class="stage__scrim" aria-hidden="true"></div>
-
-          <!-- leitura do HUD, canto superior esquerdo -->
-          <div class="hud">
-            <p class="hud__watermark">TRANSMITIR</p>
-
-            <div class="hud__meta">
-              <span class="hud__fps" id="tela-fps">30 FPS</span>
-              <span class="hud__source">TELA</span>
-              <span class="hud__live">
-                <span class="hud__live-icon" aria-hidden="true">
-                  <img src="/assets/share/icon-live.svg" alt="" width="10" height="7" />
-                </span>
-                <span>Ao Vivo</span>
-                <strong id="tela-elapsed">0:00</strong>
-              </span>
-              <span class="hud__stat">
-                <strong id="tela-viewers">0</strong><span>assistindo</span>
-              </span>
-              <span class="hud__stat"><strong id="tela-bitrate">—</strong></span>
-            </div>
-          </div>
-
-          <button id="tela-stop" type="button" class="stage__stop" hidden>
-            <span class="stage__stop-mark" aria-hidden="true"></span>
-            <span>Parar</span>
-          </button>
-
-          <!-- ── dock de controles ── -->
-          <div class="dock">
-            <div class="dock__controls">
-              <span class="dock__slot">
-                <button
-                  id="tela-start"
-                  type="button"
-                  class="dock__btn"
-                  title="Transmitir a tela"
-                  aria-label="Transmitir a tela"
-                >
-                  <img src="/assets/share/icon-screen.svg" alt="" width="17" height="17" />
-                </button>
-
-                <span class="dock__hint">
-                  <img
-                    class="dock__hint-arrow"
-                    src="/assets/share/arrow-hint.svg"
-                    alt=""
-                    width="11"
-                    height="10"
-                  />
-                  <span class="dock__hint-label">Transmitir</span>
-                </span>
-              </span>
-
-              <button
-                id="somAba"
-                type="button"
-                class="dock__btn dock__btn--audio"
-                title="Trocar a fonte do som"
-                aria-label="Trocar a fonte do som"
-              >
-                <img src="/assets/share/icon-mic.svg" alt="" width="15" height="15" />
-              </button>
-            </div>
-
-            <div class="dock__volume">
-              <span class="dock__speaker" aria-hidden="true">
-                <img src="/assets/share/icon-speaker.svg" alt="" width="11" height="11" />
-              </span>
-              <span class="meter" role="img" aria-label="Nível do áudio da transmissão">
-                <span class="meter__track"></span>
-                <span class="meter__fill"></span>
-                <span class="meter__knob"></span>
-              </span>
-            </div>
-          </div>
-
-          <!-- prévia da tela: o seletor exige o clique, que nasce no dock -->
-          <button id="tela-escolher" type="button" hidden aria-hidden="true" tabindex="-1"></button>
         </div>
 
-        <div class="stage__foot">
-          <p id="tela-status" class="status" role="status"></p>
-          <p class="tip" id="tela-nota">
-            Para trocar de abas sem congelar, escolha <strong>Janela</strong> e selecione a janela do
-            Firefox. Escolha <strong>Tela inteira</strong> para transmitir o monitor.
-          </p>
+        <div id="tela-live" hidden>
+          <div class="camera__badge"><span class="camera__dot"></span> No ar</div>
+          <div class="camera__frame">
+            <video id="tela-preview" class="camera__video" muted playsinline></video>
+          </div>
+          <div class="camera__stats">
+            <div><strong id="tela-viewers">0</strong><span>assistindo</span></div>
+            <div><strong id="tela-fps">—</strong><span>quadros</span></div>
+            <div><strong id="tela-bitrate">—</strong><span>enviando</span></div>
+            <div><strong id="tela-elapsed">0:00</strong><span>no ar</span></div>
+          </div>
+          <div class="camera__actions">
+            <button id="tela-stop" type="button" class="btn btn--danger">Parar</button>
+            <button
+              id="somAba"
+              type="button"
+              class="btn btn--ghost btn--caret"
+              title="Trocar a fonte do som"
+              aria-label="Trocar a fonte do som"
+            >
+              <img src="/assets/share/icon-mic.svg" alt="" width="15" height="15" />
+            </button>
+          </div>
         </div>
+
+        <p id="tela-status" class="status" role="status"></p>
+        <p class="tip" id="tela-nota">
+          Para trocar de abas sem congelar, escolha <strong>Janela</strong> e selecione a janela do
+          Firefox. Escolha <strong>Tela inteira</strong> para transmitir o monitor.
+        </p>
       </section>
 
       <!-- ───────────────────── Câmera (mobile / fallback) ─────────────────── -->
