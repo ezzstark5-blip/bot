@@ -471,6 +471,103 @@ app.post('/api/room', (req, res) => {
   });
 });
 
+// -----------------------------------------------------------------
+// Assistente NEXT — proxy para a API da Groq (a chave nunca vai pro
+// front-end, fica só aqui no servidor). Defina GROQ_API_KEY no seu
+// .env; o valor abaixo é só um fallback pra não travar caso esqueça.
+// -----------------------------------------------------------------
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_MODEL = 'openai/gpt-oss-120b';
+
+const ASSISTANT_SYSTEM_PROMPT = `Você é o Assistente NEXT — o assistente de suporte do site Next Cup / Next Transmissões, uma plataforma para compartilhar tela ou câmera ao vivo dentro do Discord (via Discord Activity).
+
+## Como o site funciona de verdade (use isso pra responder, não invente nada além disso)
+1. Criar uma sala: na página principal tem um botão "Criar sala". Ao clicar, gera um link único da sala, que pode ser copiado no botão "Copiar" e enviado pra quem vai transmitir ou assistir. O link expira quando a sala fecha (fica vazia).
+2. Entrar via Discord: tem um card "Iniciar no Discord" na página com 2 passos:
+   - Passo 1: clicar em "Conectar Discord" no topo da página pra autenticar (pega nome e foto automaticamente, sem senha e sem cadastro).
+   - Passo 2: depois de conectado, o sistema verifica a cada 5 segundos se a pessoa entrou em um canal de voz no Discord. O botão só libera quando ela está de fato em um canal de voz — se não achar nenhum canal, é porque ela não está em nenhum, então precisa entrar em um canal de voz no servidor do Discord.
+   - Depois disso, clicar em "Conectar bot" inicia a Activity dentro do canal de voz e abre um convite.
+3. Transmitir: dentro da Activity (já dentro do Discord), a pessoa clica no ícone de tela ou câmera pra escolher o que compartilhar (janela, aba ou câmera).
+4. Várias pessoas podem transmitir ao mesmo tempo, e a transmissão vai direto entre os participantes (baixa latência).
+
+## Como responder
+- Seja EXPLICATIVO e didático: explique o passo a passo de verdade, com uma frase de contexto antes de cada passo, como se estivesse ensinando alguém que nunca usou o site.
+- Use frases curtas e claras. Quando fizer sentido, numere os passos (1, 2, 3) em vez de escrever tudo em um parágrafo só.
+- Nunca invente comando, funcionalidade, preço, plano ou botão que não existam. Se não souber a resposta com certeza, diga que não tem certeza e sugira falar com a equipe, em vez de chutar.
+- Não fale bobagem nem enrole: vá direto ao que a pessoa perguntou.
+
+## O que você NUNCA pode falar sobre
+- Comandos internos do bot do Discord, comandos de administração/moderação, tokens, chaves de API, variáveis de ambiente, código-fonte, banco de dados ou qualquer detalhe técnico interno do servidor.
+- Nada que não seja sobre o site Next Cup / Next Transmissões. Se perguntarem algo fora desse assunto, explique educadamente que você só pode ajudar com dúvidas do Next e volte o foco pra isso.
+- Nunca finja saber algo que não está descrito acima.
+
+Responda sempre em português do Brasil, num tom simpático e direto.`;
+
+const assistantHistory = new Map(); // sessão simples em memória, por IP
+
+function callGroq(messages) {
+  return new Promise((resolve, reject) => {
+    const postData = JSON.stringify({ model: GROQ_MODEL, messages, temperature: 0.3, max_tokens: 700 });
+    const request = https.request(
+      {
+        hostname: 'api.groq.com',
+        path: '/openai/v1/chat/completions',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData),
+          'Authorization': 'Bearer ' + GROQ_API_KEY,
+        },
+      },
+      (response) => {
+        let data = '';
+        response.on('data', (chunk) => (data += chunk));
+        response.on('end', () => {
+          try {
+            const json = JSON.parse(data);
+            if (response.statusCode >= 400) return reject(new Error(json.error?.message || 'Groq error ' + response.statusCode));
+            resolve(json);
+          } catch (e) {
+            reject(e);
+          }
+        });
+      },
+    );
+    request.on('error', reject);
+    request.write(postData);
+    request.end();
+  });
+}
+
+app.post('/api/assistant', async (req, res) => {
+  try {
+    if (!GROQ_API_KEY) {
+      console.error('[assistant] GROQ_API_KEY não definido no .env');
+      return res.status(500).json({ error: 'Assistente não configurado no servidor (GROQ_API_KEY ausente).' });
+    }
+    const message = String((req.body || {}).message || '').slice(0, 1000).trim();
+    if (!message) return res.status(400).json({ error: 'Mensagem vazia.' });
+
+    const key = req.ip || 'anon';
+    const history = assistantHistory.get(key) || [];
+    history.push({ role: 'user', content: message });
+
+    const messages = [{ role: 'system', content: ASSISTANT_SYSTEM_PROMPT }].concat(history.slice(-10));
+
+    const data = await callGroq(messages);
+    const reply = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content || '').trim()
+      || 'Desculpa, não consegui responder agora.';
+
+    history.push({ role: 'assistant', content: reply });
+    assistantHistory.set(key, history.slice(-10));
+
+    res.json({ reply });
+  } catch (err) {
+    console.error('[assistant] Erro:', err.message);
+    res.status(502).json({ error: 'Assistente indisponível no momento.' });
+  }
+});
+
 // Static files — desativa o index automático para que o fallback abaixo controle a rota /
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
@@ -561,8 +658,9 @@ const LANDING_HTML = `<!DOCTYPE html>
 
     /* ── Hero ── */
     .hero{position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;
+      flex-wrap:wrap;gap:48px;justify-content:space-between;
       padding:100px 40px 60px 10%;}
-    .hero-content{display:flex;flex-direction:column;gap:22px;max-width:520px;}
+    .hero-content{display:flex;flex-direction:column;gap:22px;max-width:520px;flex:1 1 420px;}
     .eyebrow{display:inline-flex;align-items:center;gap:8px;
       font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
       color:rgba(255,255,255,.4);}
@@ -614,89 +712,142 @@ const LANDING_HTML = `<!DOCTYPE html>
     /* Footer */
     .footer{position:relative;z-index:1;padding:20px 40px 28px 10%;
       font-size:.7rem;color:rgba(255,255,255,.18);border-top:1px solid rgba(255,255,255,.06);}
-    /* ── Modal trigger ── */
-    .modal-trigger{
+    /* ── Assistente NEXT — botão flutuante (chat de IA) ── */
+    .assistant-trigger{
       position:fixed;bottom:24px;right:24px;z-index:50;
-      width:42px;height:42px;border-radius:50%;
+      width:44px;height:44px;border-radius:50%;
       background:#c62828;border:none;cursor:pointer;
       display:flex;align-items:center;justify-content:center;
       box-shadow:0 4px 20px rgba(198,40,40,.5);
       transition:transform .15s,box-shadow .15s;
     }
-    .modal-trigger:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(198,40,40,.7);}
-    .modal-trigger svg{width:18px;height:18px;fill:#fff;stroke:none;}
+    .assistant-trigger:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(198,40,40,.7);}
+    .assistant-trigger svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
-    /* ── Modal overlay ── */
-    .modal-overlay{
-      position:fixed;inset:0;z-index:60;
-      background:rgba(0,0,0,.65);backdrop-filter:blur(5px);
-      display:flex;align-items:center;justify-content:center;
-      opacity:0;pointer-events:none;transition:opacity .2s;
+    .assistant-panel{
+      position:fixed;bottom:82px;right:24px;z-index:55;
+      width:360px;max-width:calc(100vw - 32px);height:480px;max-height:calc(100vh - 120px);
+      background:#0f1115;border:1px solid rgba(255,255,255,.08);border-radius:16px;
+      box-shadow:0 20px 60px rgba(0,0,0,.5);
+      display:flex;flex-direction:column;overflow:hidden;
+      opacity:0;transform:translateY(12px) scale(.98);pointer-events:none;
+      transition:opacity .18s,transform .18s;
     }
-    .modal-overlay.open{opacity:1;pointer-events:auto;}
+    .assistant-panel.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
 
-    /* ── Modal card ── */
+    .assistant-head{
+      display:flex;align-items:center;gap:12px;padding:16px 16px;
+      border-bottom:1px solid rgba(255,255,255,.07);
+      background:linear-gradient(180deg,rgba(198,40,40,.12),transparent);
+    }
+    .assistant-head-icon{
+      width:36px;height:36px;border-radius:10px;flex-shrink:0;
+      background:rgba(198,40,40,.18);border:1px solid rgba(198,40,40,.35);
+      display:flex;align-items:center;justify-content:center;
+    }
+    .assistant-head-icon svg{width:18px;height:18px;fill:none;stroke:#ff5c5c;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .assistant-head-text{flex:1;min-width:0;}
+    .assistant-head-text .t{font-size:.88rem;font-weight:700;color:#fff;}
+    .assistant-head-text .s{font-size:.72rem;color:rgba(255,255,255,.4);}
+    .assistant-close{background:none;border:none;color:rgba(255,255,255,.45);font-size:1rem;cursor:pointer;padding:4px;line-height:1;}
+    .assistant-close:hover{color:#fff;}
+
+    .assistant-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;
+      scrollbar-width:thin;scrollbar-color:#c62828 rgba(255,255,255,.04);}
+    .assistant-body::-webkit-scrollbar{width:6px;}
+    .assistant-body::-webkit-scrollbar-track{background:rgba(255,255,255,.03);border-radius:99px;}
+    .assistant-body::-webkit-scrollbar-thumb{background:#c62828;border-radius:99px;}
+    .assistant-body::-webkit-scrollbar-thumb:hover{background:#e53935;}
+    .assistant-msg{max-width:88%;font-size:.82rem;line-height:1.55;padding:10px 13px;border-radius:12px;}
+    .assistant-msg.bot{align-self:flex-start;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.85);border-bottom-left-radius:4px;}
+    .assistant-msg.user{align-self:flex-end;background:#c62828;color:#fff;border-bottom-right-radius:4px;}
+    .assistant-msg b{color:#fff;}
+
+    .assistant-chips{display:flex;flex-wrap:wrap;gap:8px;padding:2px 0 4px;}
+    .assistant-chip{
+      background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+      color:rgba(255,255,255,.72);font-size:.72rem;padding:7px 12px;border-radius:999px;
+      cursor:pointer;transition:background .15s,border-color .15s;
+    }
+    .assistant-chip:hover{background:rgba(198,40,40,.15);border-color:rgba(198,40,40,.4);color:#fff;}
+
+    .assistant-foot{padding:12px 14px;border-top:1px solid rgba(255,255,255,.07);}
+    .assistant-input-row{display:flex;gap:8px;}
+    .assistant-input{
+      flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);
+      border-radius:10px;padding:10px 12px;color:#fff;font-size:.82rem;outline:none;
+    }
+    .assistant-input:focus{border-color:rgba(198,40,40,.5);}
+    .assistant-send{
+      width:38px;height:38px;border-radius:10px;background:#c62828;border:none;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;
+    }
+    .assistant-send:hover{background:#e53935;}
+    .assistant-send:disabled{opacity:.5;cursor:default;}
+    .assistant-send svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .assistant-typing{align-self:flex-start;font-size:.75rem;color:rgba(255,255,255,.4);padding:2px 4px;}
+
+    /* ── Card "Iniciar no Discord" — desenhado no hero, ao lado do texto ── */
+    .connect-wrap{
+      position:relative;z-index:1;flex:0 1 360px;width:100%;
+      display:flex;justify-content:center;
+    }
     .modal-card{
       background:#18191c;border:1px solid rgba(255,255,255,.1);
-      border-radius:12px;padding:14px 16px;width:90%;max-width:272px;
-      transform:translateY(16px) scale(.97);
-      transition:transform .22s cubic-bezier(.34,1.56,.64,1);
-      box-shadow:0 16px 50px rgba(0,0,0,.55);
+      border-radius:16px;padding:20px;width:100%;max-width:350px;
+      box-shadow:0 20px 60px rgba(0,0,0,.5);
     }
-    .modal-overlay.open .modal-card{transform:translateY(0) scale(1);}
-    .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-    .modal-title{display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:#fff;}
-    .modal-title svg{width:13px;height:13px;fill:#c62828;stroke:none;}
-    .modal-close{background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;font-size:.8rem;padding:2px 5px;border-radius:5px;transition:color .15s;line-height:1;}
-    .modal-close:hover{color:#fff;background:rgba(255,255,255,.07);}
+    .modal-header{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+    .modal-title{display:flex;align-items:center;gap:7px;font-size:.82rem;font-weight:700;color:#fff;}
+    .modal-title svg{width:14px;height:14px;fill:none;stroke:#c62828;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
     /* Steps */
-    .modal-step{display:flex;flex-direction:column;gap:7px;}
-    .step-label{display:flex;align-items:center;gap:6px;font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);}
-    .step-badge{width:16px;height:16px;border-radius:50%;background:#c62828;color:#fff;font-size:.55rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .modal-step{display:flex;flex-direction:column;gap:8px;}
+    .step-label{display:flex;align-items:center;gap:7px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);}
+    .step-badge{width:17px;height:17px;border-radius:50%;background:#c62828;color:#fff;font-size:.58rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
     .step-badge.done{background:#2e7d32;}
-    .step-text{font-size:.72rem;color:rgba(255,255,255,.4);line-height:1.45;}
+    .step-text{font-size:.75rem;color:rgba(255,255,255,.4);line-height:1.5;}
 
     /* Hint de aguardar */
     .modal-hint-row{
       display:flex;align-items:center;gap:7px;
-      padding:8px 10px;
+      padding:8px 11px;
       background:rgba(88,101,242,.08);border:1px solid rgba(88,101,242,.2);
-      border-radius:8px;font-size:.72rem;color:rgba(255,255,255,.4);
+      border-radius:8px;font-size:.75rem;color:rgba(255,255,255,.4);
     }
-    .modal-hint-row svg{width:12px;height:12px;fill:none;stroke:#5865f2;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+    .modal-hint-row svg{width:13px;height:13px;fill:none;stroke:#5865f2;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
 
     /* Card usuário compacto */
-    .user-card-sm{display:flex;align-items:center;gap:9px;padding:8px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;}
-    .user-card-av-sm{width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;}
-    .user-card-name-sm{font-size:.76rem;font-weight:700;color:#fff;}
-    .user-card-tag-sm{font-size:.62rem;color:rgba(255,255,255,.3);}
-    .badge-ok{margin-left:auto;background:#2e7d32;color:#fff;border-radius:50%;width:16px;height:16px;font-size:.55rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .user-card-sm{display:flex;align-items:center;gap:10px;padding:9px 11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:9px;}
+    .user-card-av-sm{width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;}
+    .user-card-name-sm{font-size:.79rem;font-weight:700;color:#fff;}
+    .user-card-tag-sm{font-size:.65rem;color:rgba(255,255,255,.3);}
+    .badge-ok{margin-left:auto;background:#2e7d32;color:#fff;border-radius:50%;width:17px;height:17px;font-size:.56rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 
     /* Canal de voz */
-    .voice-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;}
-    .voice-icon svg{width:13px;height:13px;fill:none;stroke:#3ba55d;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-    .voice-name{font-size:.76rem;font-weight:600;color:#f2f3f5;}
-    .voice-guild{font-size:.62rem;color:rgba(255,255,255,.28);}
+    .voice-row{display:flex;align-items:center;gap:9px;padding:9px 11px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:9px;}
+    .voice-icon svg{width:14px;height:14px;fill:none;stroke:#3ba55d;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .voice-name{font-size:.78rem;font-weight:600;color:#f2f3f5;}
+    .voice-guild{font-size:.64rem;color:rgba(255,255,255,.28);}
     .voice-guild.on{color:#3ba55d;}
     .voice-info{flex:1;min-width:0;}
     .voice-spinner{width:12px;height:12px;border:2px solid rgba(255,255,255,.15);border-top-color:#3ba55d;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
     .voice-spinner.hidden{display:none;}
 
     /* Erro */
-    .modal-error{font-size:.68rem;color:#ff8a80;background:rgba(255,50,50,.08);border:1px solid rgba(255,50,50,.2);border-radius:7px;padding:6px 9px;line-height:1.4;}
+    .modal-error{font-size:.72rem;color:#ff8a80;background:rgba(255,50,50,.08);border:1px solid rgba(255,50,50,.2);border-radius:7px;padding:7px 10px;line-height:1.4;}
 
     /* Botão conectar */
     .modal-btn-connect{
-      display:flex;align-items:center;justify-content:center;gap:7px;
-      padding:9px 0;background:#c62828;border:none;border-radius:8px;
-      color:#fff;font-size:.78rem;font-weight:700;cursor:pointer;width:100%;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      padding:10px 0;background:#c62828;border:none;border-radius:9px;
+      color:#fff;font-size:.81rem;font-weight:700;cursor:pointer;width:100%;
       box-shadow:0 3px 14px rgba(198,40,40,.3);
       transition:background .15s,transform .15s;
       margin-top:3px;
     }
     .modal-btn-connect:hover:not(:disabled){background:#d32f2f;transform:translateY(-1px);}
-    .modal-btn-connect:disabled{opacity:.4;cursor:not-allowed;}
+    .modal-btn-connect:disabled{opacity:.45;cursor:not-allowed;}
     .modal-btn-connect svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
     .modal-btn-connect.connected{background:#2e7d32;cursor:default;}
     .modal-btn-connect.connected:hover{transform:none;}
@@ -774,74 +925,104 @@ const LANDING_HTML = `<!DOCTYPE html>
         <p class="url-hint-text">Envie para quem vai transmitir ou assistir. Expira quando a sala fechar.</p>
       </div>
     </div>
+
+    <!-- ═══ INICIAR NO DISCORD — card desenhado ao lado do texto ═══ -->
+    <div class="connect-wrap">
+      <div class="modal-card" id="modalCard">
+
+        <!-- Cabeçalho -->
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Iniciar no Discord
+          </div>
+        </div>
+
+        <!-- Passo 1: aviso para usar o botão da topbar -->
+        <div class="modal-step" id="step1">
+          <div class="step-label"><span class="step-badge">1</span> Conecte sua conta</div>
+          <p class="step-text">Use o botão <strong style="color:#5865f2">Conectar Discord</strong> no topo da página para autenticar. Sua foto e nome aparecem aqui automaticamente.</p>
+          <div class="modal-hint-row">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Aguardando autenticação…
+          </div>
+        </div>
+
+        <!-- Passo 2: canal de voz + botão conectar (aparece após login) -->
+        <div class="modal-step" id="step2" hidden>
+
+          <!-- Card do usuário compacto -->
+          <div class="user-card-sm">
+            <img class="user-card-av-sm" id="modalUserAv" src="" alt="">
+            <div>
+              <div class="user-card-name-sm" id="modalUserName">…</div>
+              <div class="user-card-tag-sm">Discord conectado</div>
+            </div>
+            <span class="badge-ok">✓</span>
+          </div>
+
+          <!-- Canal de voz com status de refresh -->
+          <div class="step-label" style="margin-top:4px"><span class="step-badge">2</span> Canal de voz</div>
+          <div class="voice-row" id="voiceChannelRow">
+            <div class="voice-icon">
+              <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            </div>
+            <div class="voice-info">
+              <div class="voice-name" id="voiceChannelName">Buscando canal…</div>
+              <div class="voice-guild" id="voiceChannelStatus"></div>
+            </div>
+            <div class="voice-spinner" id="voiceSpinner"></div>
+          </div>
+
+          <div class="modal-error" id="modalError" hidden></div>
+
+          <button class="modal-btn-connect" id="btnConnect" disabled>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            Conectar bot
+          </button>
+        </div>
+
+      </div>
+    </div>
   </section>
 
   <footer class="footer">Next Cup · Transmissões ao vivo · nextcuptransmissoes.online</footer>
 
-  <!-- ═══════════════════ MODAL TUTORIAL ═══════════════════ -->
-  <div class="modal-overlay" id="modalOverlay">
-    <div class="modal-card" id="modalCard">
+  <!-- ═══════════════════ ASSISTENTE NEXT ═══════════════════ -->
+  <button class="assistant-trigger" id="assistantTrigger" title="Assistente NEXT">
+    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  </button>
 
-      <!-- Cabeçalho -->
-      <div class="modal-header">
-        <div class="modal-title">
-          <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          Iniciar no Discord
-        </div>
-        <button class="modal-close" id="modalClose">✕</button>
+  <div class="assistant-panel" id="assistantPanel">
+    <div class="assistant-head">
+      <div class="assistant-head-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2v1h1a3 3 0 0 1 3 3v2a3 3 0 0 1-3 3h-.28a3 3 0 0 1-5.44 0H9a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3h1V4a2 2 0 0 1 2-2z"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/><path d="M5 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/></svg>
       </div>
-
-      <!-- Passo 1: aviso para usar o botão da topbar -->
-      <div class="modal-step" id="step1">
-        <div class="step-label"><span class="step-badge">1</span> Conecte sua conta</div>
-        <p class="step-text">Use o botão <strong style="color:#5865f2">Conectar Discord</strong> no topo da página para autenticar. Sua foto e nome aparecem aqui automaticamente.</p>
-        <div class="modal-hint-row">
-          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          Aguardando autenticação…
-        </div>
+      <div class="assistant-head-text">
+        <div class="t">Assistente NEXT</div>
+        <div class="s">Dúvidas da plataforma</div>
       </div>
+      <button class="assistant-close" id="assistantClose">✕</button>
+    </div>
 
-      <!-- Passo 2: canal de voz + botão conectar (aparece após login) -->
-      <div class="modal-step" id="step2" hidden>
+    <div class="assistant-body" id="assistantBody">
+      <div class="assistant-msg bot">Olá! Sou o <b>Assistente NEXT</b> — posso te ajudar com dúvidas sobre a plataforma: conectar sua conta do Discord, criar ou entrar em salas, transmitir tela ou câmera, qualidade/fps e problemas comuns. Pergunte à vontade!</div>
+      <div class="assistant-chips" id="assistantChips">
+        <button class="assistant-chip">Como conecto minha conta?</button>
+        <button class="assistant-chip">Como crio uma sala?</button>
+        <button class="assistant-chip">Como transmito minha tela?</button>
+      </div>
+    </div>
 
-        <!-- Card do usuário compacto -->
-        <div class="user-card-sm">
-          <img class="user-card-av-sm" id="modalUserAv" src="" alt="">
-          <div>
-            <div class="user-card-name-sm" id="modalUserName">…</div>
-            <div class="user-card-tag-sm">Discord conectado</div>
-          </div>
-          <span class="badge-ok">✓</span>
-        </div>
-
-        <!-- Canal de voz com status de refresh -->
-        <div class="step-label" style="margin-top:3px"><span class="step-badge">2</span> Canal de voz</div>
-        <div class="voice-row" id="voiceChannelRow">
-          <div class="voice-icon">
-            <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-          </div>
-          <div class="voice-info">
-            <div class="voice-name" id="voiceChannelName">Buscando canal…</div>
-            <div class="voice-guild" id="voiceChannelStatus"></div>
-          </div>
-          <div class="voice-spinner" id="voiceSpinner"></div>
-        </div>
-
-        <div class="modal-error" id="modalError" hidden></div>
-
-        <button class="modal-btn-connect" id="btnConnect" disabled>
-          <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-          Conectar bot
+    <div class="assistant-foot">
+      <div class="assistant-input-row">
+        <input class="assistant-input" id="assistantInput" placeholder="Digite sua dúvida…" maxlength="500" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" name="next-assistant-msg-9f3a">
+        <button class="assistant-send" id="assistantSend">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
       </div>
-
     </div>
   </div>
-
-  <!-- Botão flutuante para abrir o modal -->
-  <button class="modal-trigger" id="modalTrigger" title="Iniciar no Discord">
-    <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-  </button>
 
   <script>
     const CLIENT_ID = '1540951591685853305';
@@ -877,13 +1058,11 @@ const LANDING_HTML = `<!DOCTYPE html>
       userNm.textContent = u.global_name || u.username;
       btnLogin.style.display = 'none';
       userPill.classList.add('visible');
-      // Modal — preenche card e avança para passo 2
+      // Modal — preenche card e avança para passo 2 (card fica fixo na página)
       document.getElementById('modalUserAv').src = av;
       document.getElementById('modalUserName').textContent = u.global_name || u.username;
       document.getElementById('step1').hidden = true;
       document.getElementById('step2').hidden = false;
-      // Abre o modal automaticamente se ainda não estiver aberto
-      document.getElementById('modalOverlay').classList.add('open');
       startVoiceRefresh(u);
     }
 
@@ -1015,11 +1194,77 @@ const LANDING_HTML = `<!DOCTYPE html>
       }
     });
 
-    // ── Abrir/fechar modal ──
-    const overlay = document.getElementById('modalOverlay');
-    document.getElementById('modalTrigger').addEventListener('click', () => overlay.classList.add('open'));
-    document.getElementById('modalClose').addEventListener('click',   () => overlay.classList.remove('open'));
-    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+    // ── Assistente NEXT ──
+    (function(){
+      var trigger = document.getElementById('assistantTrigger');
+      var panel = document.getElementById('assistantPanel');
+      var closeBtn = document.getElementById('assistantClose');
+      var body = document.getElementById('assistantBody');
+      var chips = document.getElementById('assistantChips');
+      var input = document.getElementById('assistantInput');
+      var sendBtn = document.getElementById('assistantSend');
+      var sending = false;
+
+      function toggle(open){
+        panel.classList.toggle('open', open);
+        if (open) setTimeout(function(){ input.focus(); }, 150);
+      }
+      trigger.addEventListener('click', function(){ toggle(!panel.classList.contains('open')); });
+      closeBtn.addEventListener('click', function(){ toggle(false); });
+
+      function addMsg(text, who){
+        var div = document.createElement('div');
+        div.className = 'assistant-msg ' + who;
+        div.textContent = text;
+        body.appendChild(div);
+        body.scrollTop = body.scrollHeight;
+        return div;
+      }
+
+      function send(text){
+        text = (text || input.value).trim();
+        if (!text || sending) return;
+        sending = true;
+        input.value = '';
+        if (chips) { chips.remove(); chips = null; }
+        addMsg(text, 'user');
+        sendBtn.disabled = true;
+        var typing = document.createElement('div');
+        typing.className = 'assistant-typing';
+        typing.textContent = 'Digitando…';
+        body.appendChild(typing);
+        body.scrollTop = body.scrollHeight;
+
+        fetch('/api/assistant', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text }),
+        })
+          .then(function(r){ return r.json(); })
+          .then(function(d){
+            typing.remove();
+            addMsg(d.reply || d.error || 'Não consegui responder agora.', 'bot');
+          })
+          .catch(function(){
+            typing.remove();
+            addMsg('Erro ao falar com o assistente. Tente novamente.', 'bot');
+          })
+          .finally(function(){
+            sending = false;
+            sendBtn.disabled = false;
+          });
+      }
+
+      sendBtn.addEventListener('click', function(){ send(); });
+      input.addEventListener('keydown', function(e){
+        if (e.key === 'Enter') send();
+      });
+      if (chips) {
+        chips.querySelectorAll('.assistant-chip').forEach(function(chip){
+          chip.addEventListener('click', function(){ send(chip.textContent); });
+        });
+      }
+    })();
 
     // ── Criar sala ──
     const btnCriar = document.getElementById('btnCriar');
