@@ -658,8 +658,8 @@ const LANDING_HTML = `<!DOCTYPE html>
 
     /* ── Hero ── */
     .hero{position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;
-      flex-wrap:wrap;gap:120px;justify-content:center;
-      padding:110px 7vw 70px;}
+      flex-wrap:wrap;gap:clamp(80px,12vw,200px);justify-content:center;
+      padding:110px 6vw 70px;}
     .hero-content{display:flex;flex-direction:column;gap:20px;max-width:420px;flex:1 1 360px;}
     .eyebrow{display:inline-flex;align-items:center;gap:8px;
       font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
