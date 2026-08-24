@@ -658,8 +658,9 @@ const LANDING_HTML = `<!DOCTYPE html>
 
     /* ── Hero ── */
     .hero{position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;
+      flex-wrap:wrap;gap:48px;justify-content:space-between;
       padding:100px 40px 60px 10%;}
-    .hero-content{display:flex;flex-direction:column;gap:22px;max-width:520px;}
+    .hero-content{display:flex;flex-direction:column;gap:22px;max-width:520px;flex:1 1 420px;}
     .eyebrow{display:inline-flex;align-items:center;gap:8px;
       font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
       color:rgba(255,255,255,.4);}
@@ -786,7 +787,12 @@ const LANDING_HTML = `<!DOCTYPE html>
     .assistant-close{background:none;border:none;color:rgba(255,255,255,.45);font-size:1rem;cursor:pointer;padding:4px;line-height:1;}
     .assistant-close:hover{color:#fff;}
 
-    .assistant-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
+    .assistant-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;
+      scrollbar-width:thin;scrollbar-color:#c62828 rgba(255,255,255,.04);}
+    .assistant-body::-webkit-scrollbar{width:6px;}
+    .assistant-body::-webkit-scrollbar-track{background:rgba(255,255,255,.03);border-radius:99px;}
+    .assistant-body::-webkit-scrollbar-thumb{background:#c62828;border-radius:99px;}
+    .assistant-body::-webkit-scrollbar-thumb:hover{background:#e53935;}
     .assistant-msg{max-width:88%;font-size:.82rem;line-height:1.55;padding:10px 13px;border-radius:12px;}
     .assistant-msg.bot{align-self:flex-start;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.85);border-bottom-left-radius:4px;}
     .assistant-msg.user{align-self:flex-end;background:#c62828;color:#fff;border-bottom-right-radius:4px;}
@@ -816,11 +822,10 @@ const LANDING_HTML = `<!DOCTYPE html>
     .assistant-send svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
     .assistant-typing{align-self:flex-start;font-size:.75rem;color:rgba(255,255,255,.4);padding:2px 4px;}
 
-    /* ── Card "Iniciar no Discord" — desenhado direto na página ── */
+    /* ── Card "Iniciar no Discord" — ao lado do texto, dentro do hero ── */
     .connect-wrap{
-      position:relative;z-index:1;
+      position:relative;z-index:1;flex:0 1 380px;width:100%;
       display:flex;justify-content:center;
-      padding:0 40px 80px;
     }
     .modal-card{
       background:#18191c;border:1px solid rgba(255,255,255,.1);
@@ -930,7 +935,7 @@ const LANDING_HTML = `<!DOCTYPE html>
     <div class="hero-content">
       <div class="eyebrow anim-1"><span class="eyebrow-dot"></span>Next Cup · Ao vivo</div>
       <h1 class="anim-2">Sua tela, ao vivo,<br>direto para a sala.</h1>
-      <p class="desc anim-3">Crie uma sala em um clique, compartilhe o link e transmita pelo navegador. Sem instalar nada, sem cadastro.</p>
+      <p class="desc anim-3">Conecte sua conta do Discord, entre em um canal de voz e comece a transmitir pelo navegador. Sem instalar nada, sem cadastro.</p>
 
       <div class="features anim-4">
         <div class="feature">
@@ -950,84 +955,68 @@ const LANDING_HTML = `<!DOCTYPE html>
           Sem passar pelo servidor — baixa latência
         </div>
       </div>
+    </div>
 
-      <div class="btn-row anim-6">
-        <button class="btn-criar" id="btnCriar">
-          <svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-          Criar sala
-        </button>
-      </div>
+    <!-- ═══ INICIAR NO DISCORD — card ao lado do texto ═══ -->
+    <div class="connect-wrap">
+      <div class="modal-card" id="modalCard">
 
-      <div class="url-box" id="urlBox">
-        <span class="url-label">Link da sala</span>
-        <div class="url-row">
-          <input class="url-input" id="urlInput" readonly>
-          <button class="btn-copy" id="btnCopy">Copiar</button>
+        <!-- Cabeçalho -->
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Iniciar no Discord
+          </div>
         </div>
-        <p class="url-hint-text">Envie para quem vai transmitir ou assistir. Expira quando a sala fechar.</p>
+
+        <!-- Passo 1: conectar Discord -->
+        <div class="modal-step" id="step1">
+          <div class="step-label"><span class="step-badge">1</span> Conecte sua conta</div>
+          <p class="step-text">Clique no botão abaixo para autenticar com o Discord. Vamos pegar sua foto e nome automaticamente.</p>
+          <button class="modal-btn-discord" id="modalBtnLogin">
+            <svg viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
+            </svg>
+            Conectar Discord
+          </button>
+        </div>
+
+        <!-- Passo 2: card do usuário + canal de voz (aparece após login) -->
+        <div class="modal-step" id="step2" hidden>
+          <div class="step-label"><span class="step-badge done">✓</span> Conectado</div>
+
+          <!-- Card do usuário -->
+          <div class="user-card" id="modalUserCard">
+            <img class="user-card-av" id="modalUserAv" src="" alt="">
+            <div class="user-card-info">
+              <div class="user-card-name" id="modalUserName">…</div>
+              <div class="user-card-tag">Conta Discord</div>
+            </div>
+          </div>
+
+          <!-- Canal de voz -->
+          <div class="step-label" style="margin-top:18px"><span class="step-badge">2</span> Canal de voz detectado</div>
+          <p class="step-text">O bot identificou o canal onde você está. Clique em conectar para iniciar a Activity.</p>
+
+          <div class="voice-channel-row" id="voiceChannelRow">
+            <div class="voice-channel-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            </div>
+            <div class="voice-channel-name" id="voiceChannelName">Buscando…</div>
+            <div class="voice-channel-status" id="voiceChannelStatus"></div>
+          </div>
+
+          <div class="modal-error" id="modalError" hidden></div>
+
+          <button class="modal-btn-connect" id="btnConnect" disabled>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            Conectar bot
+          </button>
+        </div>
+
       </div>
     </div>
   </section>
-
-  <!-- ═══════════════════ INICIAR NO DISCORD — card fixo na página ═══════════════════ -->
-  <div class="connect-wrap">
-    <div class="modal-card" id="modalCard">
-
-      <!-- Cabeçalho -->
-      <div class="modal-header">
-        <div class="modal-title">
-          <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          Iniciar no Discord
-        </div>
-      </div>
-
-      <!-- Passo 1: conectar Discord -->
-      <div class="modal-step" id="step1">
-        <div class="step-label"><span class="step-badge">1</span> Conecte sua conta</div>
-        <p class="step-text">Clique no botão abaixo para autenticar com o Discord. Vamos pegar sua foto e nome automaticamente.</p>
-        <button class="modal-btn-discord" id="modalBtnLogin">
-          <svg viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
-          </svg>
-          Conectar Discord
-        </button>
-      </div>
-
-      <!-- Passo 2: card do usuário + canal de voz (aparece após login) -->
-      <div class="modal-step" id="step2" hidden>
-        <div class="step-label"><span class="step-badge done">✓</span> Conectado</div>
-
-        <!-- Card do usuário -->
-        <div class="user-card" id="modalUserCard">
-          <img class="user-card-av" id="modalUserAv" src="" alt="">
-          <div class="user-card-info">
-            <div class="user-card-name" id="modalUserName">…</div>
-            <div class="user-card-tag">Conta Discord</div>
-          </div>
-        </div>
-
-        <!-- Canal de voz -->
-        <div class="step-label" style="margin-top:18px"><span class="step-badge">2</span> Canal de voz detectado</div>
-        <p class="step-text">O bot identificou o canal onde você está. Clique em conectar para iniciar a Activity.</p>
-
-        <div class="voice-channel-row" id="voiceChannelRow">
-          <div class="voice-channel-icon">
-            <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-          </div>
-          <div class="voice-channel-name" id="voiceChannelName">Buscando…</div>
-          <div class="voice-channel-status" id="voiceChannelStatus"></div>
-        </div>
-
-        <div class="modal-error" id="modalError" hidden></div>
-
-        <button class="modal-btn-connect" id="btnConnect" disabled>
-          <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-          Conectar bot
-        </button>
-      </div>
-
-    </div>
-  </div>
 
   <footer class="footer">Next Cup · Transmissões ao vivo · nextcuptransmissoes.online</footer>
 
@@ -1205,34 +1194,6 @@ const LANDING_HTML = `<!DOCTYPE html>
         btnConn.disabled = false;
         btnConn.innerHTML = '<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg> Tentar novamente';
       }
-    });
-
-    // ── Criar sala ──
-    const btnCriar = document.getElementById('btnCriar');
-    const urlBox   = document.getElementById('urlBox');
-    const urlInput = document.getElementById('urlInput');
-    const btnCopy  = document.getElementById('btnCopy');
-
-    btnCriar.addEventListener('click', async () => {
-      btnCriar.disabled=true; btnCriar.innerHTML='Criando…';
-      try {
-        const r = await fetch('/api/room',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
-        const d = await r.json();
-        if (!r.ok) throw new Error(d.error||'Erro');
-        const u = new URL(location.origin);
-        u.searchParams.set('room',d.roomId); u.searchParams.set('t',d.viewerToken);
-        urlInput.value = u.toString();
-        urlBox.classList.add('on');
-        btnCriar.innerHTML='<svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 5v14"/><path d="M5 12h14"/></svg> Criar outra sala';
-        btnCriar.disabled=false;
-        urlBox.scrollIntoView({behavior:'smooth',block:'nearest'});
-      } catch(e) { btnCriar.innerHTML='Erro — tente novamente'; btnCriar.disabled=false; }
-    });
-    btnCopy.addEventListener('click',()=>{
-      navigator.clipboard.writeText(urlInput.value).then(()=>{
-        btnCopy.textContent='Copiado!'; btnCopy.classList.add('ok');
-        setTimeout(()=>{btnCopy.textContent='Copiar';btnCopy.classList.remove('ok');},2000);
-      });
     });
 
     // ── Assistente NEXT ──
