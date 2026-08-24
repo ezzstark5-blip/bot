@@ -797,6 +797,10 @@ const LANDING_HTML = `<!DOCTYPE html>
     .user-card-name-sm{font-size:.79rem;font-weight:700;color:#fff;}
     .user-card-tag-sm{font-size:.65rem;color:rgba(255,255,255,.3);}
     .badge-ok{margin-left:auto;background:#2e7d32;color:#fff;border-radius:50%;width:17px;height:17px;font-size:.56rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .logout-btn{background:none;border:1px solid rgba(255,255,255,.12);border-radius:6px;
+      color:rgba(255,255,255,.4);width:20px;height:20px;font-size:.6rem;line-height:1;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+    .logout-btn:hover{background:#c62828;border-color:#c62828;color:#fff;}
 
     /* Canal de voz */
     .voice-row{display:flex;align-items:center;gap:9px;padding:9px 11px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:9px;}
@@ -917,6 +921,7 @@ const LANDING_HTML = `<!DOCTYPE html>
               <div class="user-card-tag-sm">Discord conectado</div>
             </div>
             <span class="badge-ok">✓</span>
+            <button class="logout-btn" id="btnLogout" title="Sair da conta">✕</button>
           </div>
 
           <!-- Canal de voz com status de refresh -->
@@ -1008,6 +1013,14 @@ const LANDING_HTML = `<!DOCTYPE html>
       discordToken = tok;
       discordUser  = u;
       if (!u || !u.id) return; // token inválido, ignora
+      // Salva a sessão — mantém a conta conectada ao recarregar o site
+      try {
+        localStorage.setItem('nextToken', tok);
+        localStorage.setItem('nextUser', JSON.stringify({
+          id: u.id, username: u.username, global_name: u.global_name,
+          avatar: u.avatar, discriminator: u.discriminator,
+        }));
+      } catch {}
       const av = u.avatar
         ? 'https://cdn.discordapp.com/avatars/'+u.id+'/'+u.avatar+'.png?size=128'
         : 'https://cdn.discordapp.com/embed/avatars/'+((Number(u.discriminator||0))%5)+'.png';
@@ -1016,12 +1029,42 @@ const LANDING_HTML = `<!DOCTYPE html>
       userNm.textContent = u.global_name || u.username;
       btnLogin.style.display = 'none';
       userPill.classList.add('visible');
-      // Modal — preenche card e avança para passo 2 (card fica fixo na página)
+      // Card — preenche dados, some o "Aguardando autenticação…" e vai pro passo 2
       document.getElementById('modalUserAv').src = av;
       document.getElementById('modalUserName').textContent = u.global_name || u.username;
       document.getElementById('step1').hidden = true;
       document.getElementById('step2').hidden = false;
       startVoiceRefresh(u);
+    }
+
+    // ── Sair da conta (X no card) ──
+    function deslogar() {
+      try { localStorage.removeItem('nextToken'); localStorage.removeItem('nextUser'); } catch {}
+      discordToken = null;
+      discordUser  = null;
+      guildId      = null;
+      channelId    = null;
+      lastGuilds   = [];
+      if (voiceRefreshTimer) { clearInterval(voiceRefreshTimer); voiceRefreshTimer = null; }
+      // Topbar volta pro botão de login
+      btnLogin.style.display = '';
+      userPill.classList.remove('visible');
+      // Card volta pro passo 1
+      document.getElementById('step2').hidden = true;
+      document.getElementById('step1').hidden = false;
+      // Reseta o estado do canal de voz e do botão conectar
+      const vcName  = document.getElementById('voiceChannelName');
+      const vcGuild = document.getElementById('voiceChannelStatus');
+      vcName.textContent = 'Buscando canal…';
+      vcGuild.textContent = '';
+      vcGuild.classList.remove('on');
+      const spinner = document.getElementById('voiceSpinner');
+      if (spinner) spinner.classList.remove('hidden');
+      document.getElementById('modalError').hidden = true;
+      const btnConn = document.getElementById('btnConnect');
+      btnConn.classList.remove('connected');
+      btnConn.disabled = true;
+      btnConn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg> Conectar bot';
     }
 
     // Verifica retorno do OAuth no hash
@@ -1030,7 +1073,16 @@ const LANDING_HTML = `<!DOCTYPE html>
     if (tok) {
       history.replaceState(null,'',location.pathname+location.search);
       fetch('https://discord.com/api/users/@me',{headers:{Authorization:'Bearer '+tok}})
-        .then(r=>r.json()).then(u => applyUser(u, tok)).catch(()=>{});
+        .then(r=>r.json()).then(u => { if (u && u.id) applyUser(u, tok); }).catch(()=>{});
+    } else {
+      // Sem OAuth no hash: restaura a sessão salva (conta continua conectada)
+      const savedTok = localStorage.getItem('nextToken');
+      if (savedTok) {
+        fetch('https://discord.com/api/users/@me', { headers: { Authorization: 'Bearer ' + savedTok } })
+          .then(r => r.ok ? r.json() : Promise.reject(new Error('expirado')))
+          .then(u => { if (u && u.id) applyUser(u, savedTok); else deslogar(); })
+          .catch(() => deslogar());
+      }
     }
 
     function doOAuth() {
@@ -1042,6 +1094,7 @@ const LANDING_HTML = `<!DOCTYPE html>
     }
 
     btnLogin.addEventListener('click', doOAuth);
+    document.getElementById('btnLogout').addEventListener('click', deslogar);
 
     // ── Refresh canal de voz a cada 5s ──
     let voiceRefreshTimer = null;
@@ -1115,28 +1168,21 @@ const LANDING_HTML = `<!DOCTYPE html>
       }, 5000);
     }
 
-    // ── Abre o convite no app do Discord, caindo pro navegador se falhar ──
+    // ── Abre o convite no app do Discord (sem pop-up) ──
     function abrirConviteDiscord(inviteUrl) {
       const code = String(inviteUrl).split('/').pop();
-      let assumiu = false;
-      const onHide = () => { if (document.hidden) assumiu = true; };
-      document.addEventListener('visibilitychange', onHide);
 
-      // 1) Deep link do aplicativo (Windows/macOS/Linux/celular)
+      // Tenta o aplicativo direto pelo deep link (Windows/macOS/Linux/celular).
+      // Roda no mesmo instante do clique, então o navegador não bloqueia.
       try { window.location.href = 'discord://-/invite/' + code; } catch {}
 
-      // 2) Se em 2s o Discord não assumiu, abre a página do convite na web
-      setTimeout(() => {
-        document.removeEventListener('visibilitychange', onHide);
-        if (!assumiu && !document.hidden) window.open(inviteUrl, '_blank');
-      }, 2000);
-
-      // 3) Link manual como última alternativa
+      // Link manual visível caso o app não abra — clique em link real nunca
+      // é bloqueado como pop-up.
       const errEl = document.getElementById('modalError');
       errEl.hidden = false;
-      errEl.innerHTML = 'Discord não abriu? Entre no canal de voz e use o convite: '
+      errEl.innerHTML = 'O Discord não abriu? Use o convite: '
         + '<a href="' + inviteUrl + '" target="_blank" rel="noopener" style="color:#7fe39a;text-decoration:underline">'
-        + 'discord.gg/' + code + '</a>';
+        + 'abrir discord.gg/' + code + '</a>';
     }
 
     // ── Botão conectar bot ──
