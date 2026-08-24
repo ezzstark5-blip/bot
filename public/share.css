@@ -788,27 +788,16 @@ img {
    vai abrir. Fora do fluxo e fora de vista até lá — no desenho ele não existe,
    e uma dica permanente aqui rouba o silêncio do palco. */
 .tip {
-  position: absolute;
-  top: 12px;
-  left: 0;
+  display: none;
   max-width: 640px;
+  margin-top: 12px;
   font-size: 12px;
   line-height: 1.55;
   color: var(--hud-faint);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s var(--ease);
 }
 
-#bloco-tela.chamando .tip,
-.stage:has(.dock__slot:hover) .tip,
-.stage:has(.dock__slot:focus-within) .tip {
-  opacity: 1;
-}
-
-/* … mas nunca por cima de uma mensagem de status. */
-.stage__foot:has(#tela-status:not(:empty)) .tip {
-  opacity: 0;
+#bloco-tela.chamando .tip {
+  display: block;
 }
 
 .tip strong {
@@ -952,7 +941,7 @@ body.is-mobile .camera {
   display: block;
 }
 
-body.is-mobile .stage {
+body.is-mobile #bloco-tela {
   display: none;
 }
 
@@ -998,6 +987,12 @@ body.is-mobile .stage {
   position: relative;
   display: flex;
   gap: 8px;
+}
+
+/* No painel da tela, Parar e som ficam lado a lado no estado ao vivo. */
+.camera__actions .btn--danger {
+  width: auto;
+  flex: 1;
 }
 
 .btn {
