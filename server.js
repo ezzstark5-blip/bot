@@ -479,16 +479,35 @@ app.post('/api/room', (req, res) => {
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_MODEL = 'openai/gpt-oss-120b';
 
-const ASSISTANT_SYSTEM_PROMPT = `Você é o Assistente NEXT, o assistente virtual do site Next Cup / Next Transmissões (transmissão de tela e câmera via Discord Activity).
-Responda SOMENTE sobre dúvidas do site e da plataforma: como conectar a conta do Discord, como entrar em um canal de voz, como criar ou entrar numa sala, como transmitir tela ou câmera, qualidade/fps, links de sala, problemas comuns de conexão, etc.
-Se a pergunta não tiver relação com o site ou a plataforma, explique educadamente que você só pode ajudar com dúvidas do Next.
-Seja breve, direto, simpático e responda sempre em português do Brasil.`;
+const ASSISTANT_SYSTEM_PROMPT = `Você é o Assistente NEXT — o assistente de suporte do site Next Cup / Next Transmissões, uma plataforma para compartilhar tela ou câmera ao vivo dentro do Discord (via Discord Activity).
+
+## Como o site funciona de verdade (use isso pra responder, não invente nada além disso)
+1. Criar uma sala: na página principal tem um botão "Criar sala". Ao clicar, gera um link único da sala, que pode ser copiado no botão "Copiar" e enviado pra quem vai transmitir ou assistir. O link expira quando a sala fecha (fica vazia).
+2. Entrar via Discord: tem um card "Iniciar no Discord" fixo na página com 2 passos:
+   - Passo 1: clicar em "Conectar Discord" pra autenticar (pega nome e foto automaticamente, sem senha e sem cadastro).
+   - Passo 2: depois de conectado, o sistema detecta automaticamente o canal de voz em que a pessoa está no Discord. Se não achar nenhum canal, é porque a pessoa não está em nenhum canal de voz — nesse caso ela precisa entrar em um canal de voz no servidor do Discord e tentar de novo.
+   - Depois disso, clicar em "Conectar bot" inicia a Activity dentro do canal de voz e abre um convite.
+3. Transmitir: dentro da Activity (já dentro do Discord), a pessoa clica no ícone de tela ou câmera pra escolher o que compartilhar (janela, aba ou câmera).
+4. Várias pessoas podem transmitir ao mesmo tempo, e a transmissão vai direto entre os participantes (baixa latência).
+
+## Como responder
+- Seja EXPLICATIVO e didático: explique o passo a passo de verdade, com uma frase de contexto antes de cada passo, como se estivesse ensinando alguém que nunca usou o site.
+- Use frases curtas e claras. Quando fizer sentido, numere os passos (1, 2, 3) em vez de escrever tudo em um parágrafo só.
+- Nunca invente comando, funcionalidade, preço, plano ou botão que não existam. Se não souber a resposta com certeza, diga que não tem certeza e sugira falar com a equipe, em vez de chutar.
+- Não fale bobagem nem enrole: vá direto ao que a pessoa perguntou.
+
+## O que você NUNCA pode falar sobre
+- Comandos internos do bot do Discord, comandos de administração/moderação, tokens, chaves de API, variáveis de ambiente, código-fonte, banco de dados ou qualquer detalhe técnico interno do servidor.
+- Nada que não seja sobre o site Next Cup / Next Transmissões. Se perguntarem algo fora desse assunto, explique educadamente que você só pode ajudar com dúvidas do Next e volte o foco pra isso.
+- Nunca finja saber algo que não está descrito acima.
+
+Responda sempre em português do Brasil, num tom simpático e direto.`;
 
 const assistantHistory = new Map(); // sessão simples em memória, por IP
 
 function callGroq(messages) {
   return new Promise((resolve, reject) => {
-    const postData = JSON.stringify({ model: GROQ_MODEL, messages, temperature: 0.5, max_tokens: 500 });
+    const postData = JSON.stringify({ model: GROQ_MODEL, messages, temperature: 0.3, max_tokens: 700 });
     const request = https.request(
       {
         hostname: 'api.groq.com',
@@ -716,17 +735,6 @@ const LANDING_HTML = `<!DOCTYPE html>
     /* Footer */
     .footer{position:relative;z-index:1;padding:20px 40px 28px 10%;
       font-size:.7rem;color:rgba(255,255,255,.18);border-top:1px solid rgba(255,255,255,.06);}
-    /* ── Modal trigger ── */
-    .modal-trigger{
-      position:fixed;bottom:24px;right:24px;z-index:50;
-      width:44px;height:44px;border-radius:50%;
-      background:#c62828;border:none;cursor:pointer;
-      display:flex;align-items:center;justify-content:center;
-      box-shadow:0 4px 20px rgba(198,40,40,.5);
-      transition:transform .15s,box-shadow .15s;
-    }
-    .modal-trigger:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(198,40,40,.7);}
-    .modal-trigger svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
     /* ── Crédito fixo ── */
     .credit-badge{
@@ -740,7 +748,7 @@ const LANDING_HTML = `<!DOCTYPE html>
 
     /* ── Assistente NEXT ── */
     .assistant-trigger{
-      position:fixed;bottom:24px;left:24px;z-index:50;
+      position:fixed;bottom:24px;right:24px;z-index:50;
       width:44px;height:44px;border-radius:50%;
       background:#c62828;border:none;cursor:pointer;
       display:flex;align-items:center;justify-content:center;
@@ -751,7 +759,7 @@ const LANDING_HTML = `<!DOCTYPE html>
     .assistant-trigger svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
     .assistant-panel{
-      position:fixed;bottom:82px;left:24px;z-index:55;
+      position:fixed;bottom:82px;right:24px;z-index:55;
       width:360px;max-width:calc(100vw - 32px);height:480px;max-height:calc(100vh - 120px);
       background:#0f1115;border:1px solid rgba(255,255,255,.08);border-radius:16px;
       box-shadow:0 20px 60px rgba(0,0,0,.5);
@@ -808,29 +816,21 @@ const LANDING_HTML = `<!DOCTYPE html>
     .assistant-send svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
     .assistant-typing{align-self:flex-start;font-size:.75rem;color:rgba(255,255,255,.4);padding:2px 4px;}
 
-    /* ── Modal overlay ── */
-    .modal-overlay{
-      position:fixed;inset:0;z-index:60;
-      background:rgba(0,0,0,.7);backdrop-filter:blur(6px);
-      display:flex;align-items:center;justify-content:center;
-      opacity:0;pointer-events:none;transition:opacity .2s;
+    /* ── Card "Iniciar no Discord" — desenhado direto na página ── */
+    .connect-wrap{
+      position:relative;z-index:1;
+      display:flex;justify-content:center;
+      padding:0 40px 80px;
     }
-    .modal-overlay.open{opacity:1;pointer-events:auto;}
-
-    /* ── Modal card ── */
     .modal-card{
       background:#18191c;border:1px solid rgba(255,255,255,.1);
-      border-radius:16px;padding:24px;width:90%;max-width:380px;
-      transform:translateY(20px) scale(.97);
-      transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+      border-radius:16px;padding:24px;width:100%;max-width:380px;
       box-shadow:0 20px 60px rgba(0,0,0,.5);
     }
-    .modal-overlay.open .modal-card{transform:translateY(0) scale(1);}
     .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
     .modal-title{display:flex;align-items:center;gap:8px;font-size:.9rem;font-weight:700;color:#fff;}
     .modal-title svg{width:16px;height:16px;fill:none;stroke:#c62828;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-    .modal-close{background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:1rem;padding:2px 6px;border-radius:5px;transition:color .15s,background .15s;}
-    .modal-close:hover{color:#fff;background:rgba(255,255,255,.08);}
+
 
     /* Steps */
     .modal-step{display:flex;flex-direction:column;gap:10px;}
@@ -969,12 +969,8 @@ const LANDING_HTML = `<!DOCTYPE html>
     </div>
   </section>
 
-  <footer class="footer">Next Cup · Transmissões ao vivo · nextcuptransmissoes.online</footer>
-
-  <div class="credit-badge">Feito por Stark e ixce <span>❤</span></div>
-
-  <!-- ═══════════════════ MODAL TUTORIAL ═══════════════════ -->
-  <div class="modal-overlay" id="modalOverlay">
+  <!-- ═══════════════════ INICIAR NO DISCORD — card fixo na página ═══════════════════ -->
+  <div class="connect-wrap">
     <div class="modal-card" id="modalCard">
 
       <!-- Cabeçalho -->
@@ -983,7 +979,6 @@ const LANDING_HTML = `<!DOCTYPE html>
           <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
           Iniciar no Discord
         </div>
-        <button class="modal-close" id="modalClose">✕</button>
       </div>
 
       <!-- Passo 1: conectar Discord -->
@@ -1034,10 +1029,9 @@ const LANDING_HTML = `<!DOCTYPE html>
     </div>
   </div>
 
-  <!-- Botão flutuante "?" para abrir o modal -->
-  <button class="modal-trigger" id="modalTrigger" title="Como usar no Discord">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-  </button>
+  <footer class="footer">Next Cup · Transmissões ao vivo · nextcuptransmissoes.online</footer>
+
+  <div class="credit-badge">Feito por Stark e ixce <span>❤</span></div>
 
   <!-- ═══════════════════ ASSISTENTE NEXT ═══════════════════ -->
   <button class="assistant-trigger" id="assistantTrigger" title="Assistente NEXT">
@@ -1115,8 +1109,6 @@ const LANDING_HTML = `<!DOCTYPE html>
       document.getElementById('modalUserName').textContent = u.global_name || u.username;
       document.getElementById('step1').hidden = true;
       document.getElementById('step2').hidden = false;
-      // Abre o modal automaticamente se ainda não estiver aberto
-      document.getElementById('modalOverlay').classList.add('open');
       fetchVoiceChannel(u);
     }
 
@@ -1215,12 +1207,6 @@ const LANDING_HTML = `<!DOCTYPE html>
         btnConn.innerHTML = '<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg> Tentar novamente';
       }
     });
-
-    // ── Abrir/fechar modal ──
-    const overlay = document.getElementById('modalOverlay');
-    document.getElementById('modalTrigger').addEventListener('click', () => overlay.classList.add('open'));
-    document.getElementById('modalClose').addEventListener('click',   () => overlay.classList.remove('open'));
-    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
 
     // ── Criar sala ──
     const btnCriar = document.getElementById('btnCriar');
