@@ -1115,6 +1115,30 @@ const LANDING_HTML = `<!DOCTYPE html>
       }, 5000);
     }
 
+    // ── Abre o convite no app do Discord, caindo pro navegador se falhar ──
+    function abrirConviteDiscord(inviteUrl) {
+      const code = String(inviteUrl).split('/').pop();
+      let assumiu = false;
+      const onHide = () => { if (document.hidden) assumiu = true; };
+      document.addEventListener('visibilitychange', onHide);
+
+      // 1) Deep link do aplicativo (Windows/macOS/Linux/celular)
+      try { window.location.href = 'discord://-/invite/' + code; } catch {}
+
+      // 2) Se em 2s o Discord não assumiu, abre a página do convite na web
+      setTimeout(() => {
+        document.removeEventListener('visibilitychange', onHide);
+        if (!assumiu && !document.hidden) window.open(inviteUrl, '_blank');
+      }, 2000);
+
+      // 3) Link manual como última alternativa
+      const errEl = document.getElementById('modalError');
+      errEl.hidden = false;
+      errEl.innerHTML = 'Discord não abriu? Entre no canal de voz e use o convite: '
+        + '<a href="' + inviteUrl + '" target="_blank" rel="noopener" style="color:#7fe39a;text-decoration:underline">'
+        + 'discord.gg/' + code + '</a>';
+    }
+
     // ── Botão conectar bot ──
     document.getElementById('btnConnect').addEventListener('click', async () => {
       const btnConn = document.getElementById('btnConnect');
@@ -1142,8 +1166,8 @@ const LANDING_HTML = `<!DOCTYPE html>
         btnConn.classList.add('connected');
         btnConn.disabled = true;
         btnConn.innerHTML = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg> Conectado';
-        // Abre o invite em nova aba
-        if (d.invite_url) window.open(d.invite_url, '_blank');
+        // Abre o convite: tenta o app do Discord direto, com fallback pro navegador
+        if (d.invite_url) abrirConviteDiscord(d.invite_url);
       } catch(e) {
         errEl.textContent = e.message;
         errEl.hidden = false;
