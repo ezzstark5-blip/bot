@@ -1,0 +1,19 @@
+{
+  "members": {
+    "1538530804173504545": {
+      "id": "1538530804173504545",
+      "username": "angz31zz95",
+      "globalName": "angz31zz95",
+      "avatarUrl": "https://cdn.discordapp.com/embed/avatars/3.png",
+      "accessToken": "MTU0Njc0NTE4MjAzNTEyMDE1OA.ILZEmxhvQSPFM8qGaU7eM9o7kCD5fy",
+      "refreshToken": "cUHNzlPCigvONdezJJTPLN2Ko9YuKs",
+      "expiresAt": 1789448322635,
+      "scope": "identify guilds.join",
+      "authAt": 1788843522635,
+      "joinedGuilds": [
+        "1545972504139530332"
+      ],
+      "updatedAt": 1788843578444
+    }
+  }
+}
