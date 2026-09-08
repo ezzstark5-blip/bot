@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Next · Verificação</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #070707;
+      --fg: #f5f5f5;
+      --mute: rgba(245, 245, 245, 0.45);
+      --line: rgba(255, 255, 255, 0.09);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      font-family: "Sora", system-ui, sans-serif;
+      color: var(--fg);
+      background: var(--bg);
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 55% 40% at 50% 40%, rgba(255,255,255,0.03), transparent 70%),
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+      background-size: auto, 56px 56px, 56px 56px;
+      mask-image: radial-gradient(ellipse 50% 55% at 50% 45%, #000 15%, transparent 72%);
+      pointer-events: none;
+    }
+
+    .frame {
+      position: relative;
+      width: min(420px, calc(100vw - 2rem));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 1.35rem;
+      z-index: 1;
+    }
+
+    .mark {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 0.9rem;
+      letter-spacing: 0.28em;
+      color: var(--mute);
+      text-transform: uppercase;
+      opacity: 0;
+      animation: up 0.75s cubic-bezier(.16,1,.3,1) forwards;
+    }
+
+    .title {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(2.8rem, 9vw, 3.8rem);
+      letter-spacing: 0.02em;
+      line-height: 0.9;
+      opacity: 0;
+      animation: up 0.8s cubic-bezier(.16,1,.3,1) 0.05s forwards;
+    }
+
+    .hero {
+      position: relative;
+      width: 156px;
+      height: 156px;
+      margin: 0.35rem 0 0.1rem;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      animation: up 0.85s cubic-bezier(.16,1,.3,1) 0.1s forwards;
+    }
+
+    .track {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+    }
+
+    .arc {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1.5px solid transparent;
+      border-top-color: rgba(255,255,255,0.85);
+      border-right-color: rgba(255,255,255,0.15);
+      animation: spin 1s linear infinite;
+    }
+
+    .arc.pause {
+      animation: none;
+      border-color: rgba(255,255,255,0.85);
+      transition: border-color 0.35s ease, transform 0.45s ease;
+      transform: scale(1.02);
+    }
+
+    .avatar {
+      width: 112px;
+      height: 112px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #121212;
+      border: 1px solid var(--line);
+      opacity: 0;
+      transform: scale(0.9);
+      transition: opacity 0.45s ease, transform 0.55s cubic-bezier(.16,1,.3,1);
+    }
+
+    .avatar.on {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .check {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #fff;
+      color: #070707;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 0.35s ease, transform 0.4s cubic-bezier(.16,1,.3,1);
+    }
+
+    .check.on {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .check svg { width: 14px; height: 14px; }
+
+    .who {
+      min-height: 1.35em;
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .who.on {
+      opacity: 1;
+      transform: none;
+    }
+
+    .who span {
+      color: var(--mute);
+      font-weight: 300;
+      font-size: 0.8rem;
+      display: block;
+      margin-top: 0.15rem;
+    }
+
+    /* Logs: um por vez */
+    .logbox {
+      width: 100%;
+      min-height: 3.2rem;
+      margin-top: 0.2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.45rem;
+      opacity: 0;
+      animation: up 0.8s cubic-bezier(.16,1,.3,1) 0.16s forwards;
+    }
+
+    .log {
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.025);
+      text-align: left;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    .log.show {
+      display: flex;
+      animation: logIn 0.45s cubic-bezier(.16,1,.3,1) forwards;
+    }
+
+    .log.done {
+      opacity: 0.5;
+    }
+
+    .log .n {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+      color: var(--mute);
+      width: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    .log.show .n { color: #fff; }
+    .log.done .n { color: var(--mute); }
+
+    .log .t {
+      flex: 1;
+      font-size: 0.9rem;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+
+    .log .s {
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--mute);
+      font-weight: 500;
+    }
+
+    .log.show:not(.done) .s {
+      color: rgba(255,255,255,0.75);
+    }
+
+    .bar {
+      width: 100%;
+      height: 1px;
+      background: rgba(255,255,255,0.07);
+      overflow: hidden;
+    }
+
+    .bar > i {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: rgba(255,255,255,0.7);
+      transition: width 0.6s cubic-bezier(.16,1,.3,1);
+    }
+
+    .success {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 1.25rem;
+      letter-spacing: 0.14em;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+    }
+
+    .success.on {
+      opacity: 1;
+      transform: none;
+    }
+
+    .err {
+      display: none;
+      max-width: 34ch;
+      color: #ffb4b4;
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+
+    .err.on { display: block; animation: up 0.4s ease; }
+
+    .foot {
+      font-size: 0.72rem;
+      color: var(--mute);
+      letter-spacing: 0.05em;
+      opacity: 0;
+      animation: up 0.75s cubic-bezier(.16,1,.3,1) 0.22s forwards;
+    }
+
+    @keyframes up {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    @keyframes logIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <main class="frame">
+    <p class="mark">Next Community</p>
+    <h1 class="title">Verificação</h1>
+
+    <div class="hero">
+      <div class="track"></div>
+      <div class="arc" id="arc"></div>
+      <img class="avatar" id="avatar" alt="" />
+      <div class="check" id="check">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+    </div>
+
+    <p class="who" id="who"></p>
+
+    <div class="logbox" id="logbox">
+      <div class="log" data-i="1">
+        <span class="n">01</span>
+        <span class="t">Verificando ID do usuário…</span>
+        <span class="s">agora</span>
+      </div>
+      <div class="log" data-i="2">
+        <span class="n">02</span>
+        <span class="t">Usuário encontrado</span>
+        <span class="s">agora</span>
+      </div>
+      <div class="log" data-i="3">
+        <span class="n">03</span>
+        <span class="t">Validando no servidor…</span>
+        <span class="s">agora</span>
+      </div>
+      <div class="log" data-i="4">
+        <span class="n">04</span>
+        <span class="t">Cargo entregue</span>
+        <span class="s">agora</span>
+      </div>
+    </div>
+
+    <div class="bar"><i id="fill"></i></div>
+    <p class="success" id="success">Acesso liberado</p>
+    <p class="err" id="err"></p>
+    <p class="foot">OAuth seguro · Discord</p>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const sid = params.get("sid");
+    const errParam = params.get("error");
+
+    const arc = document.getElementById("arc");
+    const avatar = document.getElementById("avatar");
+    const check = document.getElementById("check");
+    const who = document.getElementById("who");
+    const fill = document.getElementById("fill");
+    const errEl = document.getElementById("err");
+    const success = document.getElementById("success");
+
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+    function showLog(n) {
+      document.querySelectorAll(".log").forEach((el) => {
+        const i = Number(el.dataset.i);
+        const s = el.querySelector(".s");
+        if (i === n) {
+          el.classList.remove("done");
+          el.classList.add("show");
+          s.textContent = "agora";
+        } else {
+          el.classList.remove("show", "done");
+        }
+      });
+      fill.style.width = `${(n / 4) * 100}%`;
+    }
+
+    function fail(msg) {
+      arc.classList.add("pause");
+      errEl.textContent = msg;
+      errEl.classList.add("on");
+      setTimeout(() => { location.href = "/login"; }, 1800);
+    }
+
+    async function verify() {
+      try {
+        showLog(1);
+        await sleep(450);
+
+        const me = await fetch("/api/session/" + encodeURIComponent(sid)).then((r) => r.json());
+        if (!me.ok) throw new Error(me.error || "Sessão inválida");
+
+        showLog(2);
+        if (me.avatarUrl) {
+          avatar.src = me.avatarUrl;
+          avatar.onload = () => avatar.classList.add("on");
+        } else {
+          avatar.classList.add("on");
+        }
+        who.innerHTML = `@${me.username || me.id}<span>conta confirmada</span>`;
+        who.classList.add("on");
+        await sleep(500);
+
+        showLog(3);
+        await sleep(400);
+
+        const grant = await fetch("/api/grant", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sid }),
+        }).then((r) => r.json());
+
+        if (!grant.ok) throw new Error(grant.error || "Não foi possível entregar o cargo");
+
+        showLog(4);
+        fill.style.width = "100%";
+        arc.classList.add("pause");
+        check.classList.add("on");
+        success.classList.add("on");
+        who.innerHTML = `@${me.username || me.id}<span>usuário aprovado</span>`;
+      } catch (e) {
+        fail(e.message || "Erro na verificação");
+      }
+    }
+
+    if (errParam) {
+      fail(decodeURIComponent(errParam));
+    } else if (sid) {
+      verify();
+    } else {
+      showLog(1);
+      setTimeout(() => location.replace("/login"), 400);
+    }
+  </script>
+</body>
+</html>

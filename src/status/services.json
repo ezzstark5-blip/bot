@@ -1,0 +1,41 @@
+{
+  "updatedAt": null,
+  "services": [
+    {
+      "id": "tools",
+      "name": "Tools",
+      "description": "Painel de ferramentas (/setup-tools)",
+      "status": "online"
+    },
+    {
+      "id": "autoquest",
+      "name": "AutoQuest",
+      "description": "Farm de missões e Orbs (/quest)",
+      "status": "online"
+    },
+    {
+      "id": "hypesquad",
+      "name": "HypeSquad",
+      "description": "Resgate de casas (/resgatar)",
+      "status": "online"
+    },
+    {
+      "id": "clonner",
+      "name": "Clonador",
+      "description": "Clonagem de servidores (/clonner)",
+      "status": "online"
+    },
+    {
+      "id": "tickets",
+      "name": "Tickets",
+      "description": "Central de atendimento",
+      "status": "online"
+    },
+    {
+      "id": "ia",
+      "name": "IA",
+      "description": "Assistente Groq (/ia)",
+      "status": "online"
+    }
+  ]
+}
