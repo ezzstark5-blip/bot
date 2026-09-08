@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: bot-hm
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: DISABLE_SELF_FLOW
+        value: "true"
+      - key: AUTH_PUBLIC_URL
+        value: https://bot-9e38.onrender.com
+      - key: AUTH_REDIRECT_URI
+        value: https://bot-9e38.onrender.com/callback
+      # Demais secrets: configure no painel do Render (Environment)
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: AUTH_CLIENT_SECRET
+        sync: false
+      - key: APP_ID
+        sync: false
+      - key: GUILD_ID
+        sync: false
+      - key: OWNER_ID
+        sync: false
+      - key: AUTH_CLIENT_ID
+        sync: false

@@ -1,0 +1,32 @@
+{
+  "470205398234693653:470205398234693653": {
+    "type": "PLAYING",
+    "status": "online",
+    "name": "Flow tools",
+    "details": "feito por yuki",
+    "state": ".gg/flowvazamentos",
+    "largeImage": "https://cdn.discordapp.com/attachments/1531559302840717455/1539685054392049775/download.jpg?ex=6a8736f2&is=6a85e572&hm=4beeb5cfd14d4902d1fc0bc199651e37e000fedd7b770a922ce1b73ce548beed",
+    "largeText": "",
+    "smallImage": "",
+    "smallText": "",
+    "buttons": [],
+    "timerMode": "elapsed",
+    "timerHours": 999,
+    "timerMinutes": 59
+  },
+  "1330151244005769310:1537322514320064623": {
+    "type": "STREAMING",
+    "status": "online",
+    "name": "Meu perfil",
+    "details": "Personalizado por mim",
+    "state": "",
+    "largeImage": "",
+    "largeText": "",
+    "smallImage": "",
+    "smallText": "",
+    "buttons": [],
+    "timerMode": "elapsed",
+    "timerHours": 0,
+    "timerMinutes": 0
+  }
+}
