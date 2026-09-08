@@ -1,0 +1,6 @@
+{
+  "name": "bot-hm-flow-tools",
+  "private": true,
+  "type": "commonjs",
+  "description": "Self Flow module (CommonJS) embedded in Bot Hm"
+}
